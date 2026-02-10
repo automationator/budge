@@ -21,6 +21,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY backend/src/ ./src/
 COPY backend/alembic/ ./alembic/
 COPY backend/alembic.ini ./
+COPY backend/seed.py ./
 
 # Install the project itself
 RUN uv sync --frozen --no-dev
