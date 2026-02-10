@@ -1,0 +1,64 @@
+services:
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - VITE_API_PROXY_TARGET=http://api:8000
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/alembic:/app/alembic
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - POSTGRES_USER=budge
+      - POSTGRES_PASSWORD=budge
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=budge
+      - DEBUG=false
+    command: uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:18
+    environment:
+      - POSTGRES_USER=budge
+      - POSTGRES_PASSWORD=budge
+      - POSTGRES_DB=budge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U budge -d budge"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  frontend_node_modules:

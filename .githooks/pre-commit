@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Pre-commit hook to run backend and frontend linting
+# Fails if any linting errors are found
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${YELLOW}Running pre-commit checks...${NC}"
+
+# Get the root directory of the git repo
+ROOT_DIR=$(git rev-parse --show-toplevel)
+
+# Track if we have any failures
+FAILED=0
+
+# Backend linting
+echo -e "\n${YELLOW}[1/2] Backend linting (ruff)...${NC}"
+cd "$ROOT_DIR/backend"
+if uv run ruff check . && uv run ruff format --check .; then
+    echo -e "${GREEN}Backend linting passed${NC}"
+else
+    echo -e "${RED}Backend linting failed${NC}"
+    FAILED=1
+fi
+
+# Frontend linting
+echo -e "\n${YELLOW}[2/2] Frontend linting (eslint)...${NC}"
+cd "$ROOT_DIR/frontend"
+if npm run lint --silent; then
+    echo -e "${GREEN}Frontend linting passed${NC}"
+else
+    echo -e "${RED}Frontend linting failed${NC}"
+    FAILED=1
+fi
+
+# Final result
+echo ""
+if [ $FAILED -eq 0 ]; then
+    echo -e "${GREEN}All pre-commit checks passed!${NC}"
+    exit 0
+else
+    echo -e "${RED}Pre-commit checks failed. Please fix the issues above.${NC}"
+    echo -e "Run 'make format' to auto-fix backend issues, then 'cd frontend && npm run lint -- --fix' for frontend."
+    exit 1
+fi

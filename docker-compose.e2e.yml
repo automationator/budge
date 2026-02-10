@@ -1,0 +1,7 @@
+# E2E test environment override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+
+services:
+  api:
+    environment:
+      - ENV=e2e
