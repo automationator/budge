@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from src.admin.models import SystemSettingsBase
 from src.auth.service import create_access_token
 from src.config import settings
 from src.database import Base, get_async_session
@@ -26,6 +27,7 @@ async def _engine() -> AsyncGenerator[AsyncEngine]:
     engine = create_async_engine(settings.database_url, echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(SystemSettingsBase.metadata.create_all)
     yield engine
     await engine.dispose()
 

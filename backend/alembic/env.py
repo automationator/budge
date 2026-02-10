@@ -7,6 +7,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
+from src.admin.models import SystemSettingsBase
 from src.config import settings
 from src.models import Base
 
@@ -18,7 +19,7 @@ ALEMBIC_SCHEMA = os.environ.get("ALEMBIC_SCHEMA")
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = Base.metadata
+target_metadata = [Base.metadata, SystemSettingsBase.metadata]
 
 
 def get_url() -> str:
