@@ -153,12 +153,9 @@ prod-build:
 	docker compose -f docker-compose.prod.yml --env-file .env.prod build
 
 prod-up: prod-build
-	docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
-	@echo "Waiting for services to be healthy..."
-	@sleep 5
-	docker compose -f docker-compose.prod.yml --env-file .env.prod exec api uv run alembic upgrade head
-	@echo ""
-	@echo "Budge is running at http://localhost:$${HTTP_PORT:-80}"
+        docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+        @echo ""
+        @echo "Budge is running at http://localhost:$${HTTP_PORT:-80}
 
 prod-down:
 	docker compose -f docker-compose.prod.yml --env-file .env.prod down
