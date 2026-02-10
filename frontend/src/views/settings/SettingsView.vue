@@ -34,7 +34,8 @@ async function loadAdminSettings() {
   }
 }
 
-async function onRegistrationToggle(newValue: boolean) {
+async function onRegistrationToggle(newValue: boolean | null) {
+  if (newValue === null) return
   try {
     savingAdminSettings.value = true
     await updateSystemSettings({ registration_enabled: newValue })

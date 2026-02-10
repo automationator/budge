@@ -636,7 +636,7 @@ async function handleTransactionChange() {
             </p>
             <div class="text-center py-4">
               <MoneyDisplay
-                :amount="account.cleared_balance"
+                :amount="account!.cleared_balance"
                 size="large"
               />
             </div>
