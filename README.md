@@ -474,3 +474,7 @@ Intentional allocation—assigning every dollar to an envelope—is a sound prin
 3. **Continuous cash flow** — Money arrives and leaves on its own schedule; Budge works the same way
 4. **Budget on your own schedule** — No required rituals or calendar-driven workflows
 5. **Flexibility** — Adjust envelopes, rules, and caps anytime
+
+## License
+
+Copyright (c) 2025-2026 Matthew Wilson. Licensed under [AGPL-3.0](LICENSE).
