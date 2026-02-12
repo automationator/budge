@@ -3,8 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
-import { getSystemSettings, updateSystemSettings } from '@/api/admin'
+import { getSystemSettings, updateSystemSettings, getVersionInfo } from '@/api/admin'
 import { showSnackbar } from '@/App.vue'
+import type { VersionInfo } from '@/types'
 
 const theme = useTheme()
 const authStore = useAuthStore()
@@ -15,12 +16,21 @@ const isAdmin = computed(() => authStore.user?.is_admin ?? false)
 const registrationEnabled = ref(true)
 const loadingAdminSettings = ref(false)
 const savingAdminSettings = ref(false)
+const versionInfo = ref<VersionInfo | null>(null)
 
 onMounted(async () => {
   if (isAdmin.value) {
-    await loadAdminSettings()
+    await Promise.all([loadAdminSettings(), checkForUpdates()])
   }
 })
+
+async function checkForUpdates() {
+  try {
+    versionInfo.value = await getVersionInfo()
+  } catch {
+    // Silently fail — version check is non-critical
+  }
+}
 
 async function loadAdminSettings() {
   try {
@@ -252,6 +262,31 @@ async function savePassword() {
         Admin Settings
       </v-card-title>
       <v-card-text>
+        <v-alert
+          v-if="versionInfo?.update_available"
+          type="info"
+          variant="tonal"
+          class="mb-4"
+        >
+          <div>
+            A new version of Budge is available: <strong>{{ versionInfo.latest_version }}</strong>
+            (current: {{ versionInfo.current_version }})
+          </div>
+          <div class="text-caption mt-1">
+            <code>docker compose pull && docker compose up -d</code>
+          </div>
+          <v-btn
+            v-if="versionInfo.release_url"
+            size="small"
+            variant="text"
+            :href="versionInfo.release_url"
+            target="_blank"
+            class="mt-2 px-0"
+          >
+            View Release Notes
+          </v-btn>
+        </v-alert>
+
         <v-switch
           v-model="registrationEnabled"
           label="Allow new user registration"
@@ -263,6 +298,18 @@ async function savePassword() {
         />
         <div class="text-caption text-medium-emphasis mt-2">
           When disabled, only existing users can log in. New users cannot create accounts.
+        </div>
+
+        <div
+          v-if="versionInfo"
+          class="text-caption text-medium-emphasis mt-4"
+        >
+          <template v-if="versionInfo.error">
+            Version: {{ versionInfo.current_version }} ({{ versionInfo.error }})
+          </template>
+          <template v-else>
+            Version: {{ versionInfo.current_version }}
+          </template>
         </div>
       </v-card-text>
     </v-card>

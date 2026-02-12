@@ -19,3 +19,13 @@ class RegistrationStatusResponse(BaseModel):
     """Public response for registration status check."""
 
     registration_enabled: bool
+
+
+class VersionResponse(BaseModel):
+    """Response schema for version check."""
+
+    current_version: str
+    latest_version: str | None = None
+    update_available: bool = False
+    release_url: str | None = None
+    error: str | None = None

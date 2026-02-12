@@ -245,3 +245,11 @@ export interface SystemSettings {
 export interface RegistrationStatus {
   registration_enabled: boolean
 }
+
+export interface VersionInfo {
+  current_version: string
+  latest_version: string | null
+  update_available: boolean
+  release_url: string | null
+  error: string | null
+}

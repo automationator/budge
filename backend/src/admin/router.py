@@ -5,7 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.admin import service
 from src.admin.dependencies import require_admin
-from src.admin.schemas import SystemSettingsResponse, SystemSettingsUpdate
+from src.admin.schemas import (
+    SystemSettingsResponse,
+    SystemSettingsUpdate,
+    VersionResponse,
+)
 from src.database import get_async_session
 from src.users.models import User
 
@@ -31,3 +35,11 @@ async def update_settings(
     """Update system settings (admin only)."""
     settings = await service.update_system_settings(session, settings_in)
     return SystemSettingsResponse.model_validate(settings)
+
+
+@router.get("/version", response_model=VersionResponse)
+async def get_version(
+    _admin: Annotated[User, Depends(require_admin)],
+) -> VersionResponse:
+    """Check for available updates (admin only)."""
+    return await service.check_version()

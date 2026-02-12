@@ -1,4 +1,4 @@
-.PHONY: help build up down logs db-upgrade db-downgrade db-revision clean restart fresh db-wait lint format test test-file web-install web-dev web-build web-lint web-test web-test-watch web-test-coverage web-test-e2e web-test-e2e-ui web-test-all update-deps outdated prod-build prod-up prod-down prod-logs prod-backup prod-restore setup-hooks
+.PHONY: help build up down logs db-upgrade db-downgrade db-revision clean restart fresh db-wait lint format test test-file web-install web-dev web-build web-lint web-test web-test-watch web-test-coverage web-test-e2e web-test-e2e-ui web-test-all update-deps outdated prod-build prod-up prod-down prod-logs prod-pull prod-backup prod-restore setup-hooks
 
 help:
 	@echo "Available commands:"
@@ -36,10 +36,11 @@ help:
 	@echo "  make outdated      - Show available dependency updates"
 	@echo ""
 	@echo "Production commands:"
-	@echo "  make prod-build    - Build production Docker images"
+	@echo "  make prod-pull     - Pull latest images from GHCR"
 	@echo "  make prod-up       - Start production stack"
 	@echo "  make prod-down     - Stop production stack"
 	@echo "  make prod-logs     - View production logs"
+	@echo "  make prod-build    - Build production images locally"
 	@echo "  make prod-backup   - Create database backup"
 	@echo "  make prod-restore  - Restore database backup"
 
@@ -152,7 +153,10 @@ setup-hooks:
 prod-build:
 	docker compose -f docker-compose.prod.yml --env-file .env.prod build
 
-prod-up: prod-build
+prod-pull:
+	docker compose -f docker-compose.prod.yml --env-file .env.prod pull
+
+prod-up:
 	docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 	@echo ""
 	@echo "Budge is running at http://localhost:$(or $(HTTP_PORT),80)"

@@ -48,6 +48,10 @@ class Settings(BaseSettings):
                 )
         return v
 
+    # Version & Updates
+    app_version: str = "dev"
+    github_repo: str = "automationator/budge"
+
     # Database
     postgres_user: str = "budge"
     postgres_password: str = "budge"
