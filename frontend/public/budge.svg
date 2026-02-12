@@ -1,32 +1,97 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#34d399"/>
-      <stop offset="100%" stop-color="#059669"/>
+    <!-- Main gradient - rich teal to deep emerald -->
+    <linearGradient id="mainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2DD4A8"/>
+      <stop offset="50%" stop-color="#1A9E7A"/>
+      <stop offset="100%" stop-color="#0F6B55"/>
     </linearGradient>
-    <linearGradient id="coin" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fcd34d"/>
-      <stop offset="100%" stop-color="#f59e0b"/>
+    
+    <!-- Lighter accent gradient -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5EEDC4"/>
+      <stop offset="100%" stop-color="#2DD4A8"/>
     </linearGradient>
+    
+    <!-- Flap shadow gradient -->
+    <linearGradient id="flapShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0F6B55" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0F6B55" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Subtle inner shadow for depth -->
+    <filter id="innerGlow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur"/>
+      <feOffset dx="0" dy="3" result="offsetBlur"/>
+      <feComposite in2="SourceAlpha" operator="out" result="inverse"/>
+      <feFlood flood-color="#000000" flood-opacity="0.12" result="color"/>
+      <feComposite in="color" in2="inverse" operator="in" result="shadow"/>
+      <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
+    </filter>
+
+    <!-- Drop shadow for the whole icon -->
+    <filter id="dropShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0F6B55" flood-opacity="0.25"/>
+    </filter>
+
+    <!-- Clip for the envelope body -->
+    <clipPath id="envelopeClip">
+      <rect x="96" y="168" width="320" height="220" rx="24"/>
+    </clipPath>
   </defs>
 
-  <!-- Background -->
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- === BACKGROUND CIRCLE === -->
+  <circle cx="256" cy="256" r="240" fill="url(#mainGrad)" filter="url(#dropShadow)"/>
+  
+  <!-- Subtle ring detail -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#5EEDC4" stroke-width="1" stroke-opacity="0.2"/>
 
-  <!-- Envelope body -->
-  <rect x="80" y="172" width="352" height="224" rx="24" fill="#fff" opacity="0.95"/>
+  <!-- === ENVELOPE BODY === -->
+  <!-- Main envelope rectangle -->
+  <rect x="96" y="168" width="320" height="220" rx="24" fill="#FFFFFF" opacity="0.95"/>
+  
+  <!-- Inner shadow on envelope -->
+  <rect x="96" y="168" width="320" height="220" rx="24" fill="url(#flapShadow)" opacity="0.15"/>
 
-  <!-- Envelope flap -->
-  <path d="M80 196c0-13.3 10.7-24 24-24h304c13.3 0 24 10.7 24 24L256 320Z" fill="#fff"/>
+  <!-- === ENVELOPE FLAP (open, folded back) === -->
+  <!-- The V-shaped open flap -->
+  <path d="M96 192 L256 298 L416 192 L416 172 C416 158.7 405.3 148 392 148 L120 148 C106.7 148 96 158.7 96 172 Z" 
+        fill="#F0FDF9" opacity="0.95"/>
+  
+  <!-- Flap fold line highlight -->
+  <path d="M96 192 L256 298 L416 192" 
+        fill="none" stroke="#2DD4A8" stroke-width="2.5" stroke-opacity="0.5" stroke-linejoin="round"/>
 
-  <!-- Flap fold line -->
-  <path d="M80 196 L256 320 L432 196" fill="none" stroke="#059669" stroke-width="6" opacity="0.2"/>
+  <!-- === DOLLAR SIGN - stylized and modern === -->
+  <!-- Circular coin shape behind the dollar sign -->
+  <circle cx="256" cy="310" r="52" fill="url(#accentGrad)" opacity="0.9"/>
+  <circle cx="256" cy="310" r="48" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.5"/>
+  
+  <!-- Dollar sign '$' - clean geometric style -->
+  <!-- Top curve -->
+  <path d="M272 284 C272 284 266 278 256 278 C246 278 238 284 238 292 C238 300 246 304 256 307 C266 310 274 314 274 323 C274 332 266 338 256 338 C246 338 240 332 240 332" 
+        fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Vertical bar -->
+  <line x1="256" y1="272" x2="256" y2="346" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
 
-  <!-- Coin circle -->
-  <circle cx="336" cy="296" r="52" fill="url(#coin)"/>
-  <circle cx="336" cy="296" r="44" fill="none" stroke="#d97706" stroke-width="3" opacity="0.4"/>
+  <!-- === ROLLING MOTION ARROWS === -->
+  <!-- Curved arrow on the left - representing continuous rolling flow -->
+  <path d="M130 120 C100 140, 78 180, 80 210" 
+        fill="none" stroke="#5EEDC4" stroke-width="5" stroke-linecap="round" stroke-opacity="0.8"/>
+  <!-- Left arrow head -->
+  <path d="M74 198 L80 212 L94 206" 
+        fill="none" stroke="#5EEDC4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
 
-  <!-- Dollar sign -->
-  <path d="M336 268v4M336 320v4" stroke="#92400e" stroke-width="6" stroke-linecap="round"/>
-  <path d="M320 282c0-8 6-14 16-14s16 5 16 12c0 8-8 10-16 12s-16 4-16 12c0 7 6 14 16 14s16-6 16-14" fill="none" stroke="#92400e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Curved arrow on the right - representing continuous rolling flow -->
+  <path d="M382 396 C412 376, 434 336, 432 306" 
+        fill="none" stroke="#5EEDC4" stroke-width="5" stroke-linecap="round" stroke-opacity="0.8"/>
+  <!-- Right arrow head -->
+  <path d="M438 318 L432 304 L418 310" 
+        fill="none" stroke="#5EEDC4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
+
+  <!-- === SMALL ACCENT DOTS - suggesting continuous motion === -->
+  <circle cx="118" cy="112" r="4" fill="#5EEDC4" opacity="0.6"/>
+  <circle cx="394" cy="404" r="4" fill="#5EEDC4" opacity="0.6"/>
+  <circle cx="140" cy="106" r="3" fill="#5EEDC4" opacity="0.4"/>
+  <circle cx="374" cy="408" r="3" fill="#5EEDC4" opacity="0.4"/>
 </svg>
