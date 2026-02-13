@@ -3017,3 +3017,362 @@ async def test_update_transfer_clear_both_sides_at_once(
     assert checking.uncleared_balance == 0
     assert savings.cleared_balance == 8000
     assert savings.uncleared_balance == 0
+
+
+async def test_update_transaction_account_id_updates_both_account_balances(
+    authenticated_client: AsyncClient,
+    session: AsyncSession,
+    test_user: User,
+) -> None:
+    """Moving a transaction to a different account reverses old and applies to new."""
+    result = await session.execute(
+        select(Budget).where(Budget.owner_id == test_user.id)
+    )
+    budget = result.scalar_one()
+
+    account_a = Account(
+        budget_id=budget.id,
+        name="Account A",
+        account_type=AccountType.CHECKING,
+        include_in_budget=False,
+        cleared_balance=0,
+        uncleared_balance=0,
+    )
+    account_b = Account(
+        budget_id=budget.id,
+        name="Account B",
+        account_type=AccountType.CHECKING,
+        include_in_budget=False,
+        cleared_balance=0,
+        uncleared_balance=0,
+    )
+    payee = Payee(budget_id=budget.id, name="Move Payee")
+    session.add(account_a)
+    session.add(account_b)
+    session.add(payee)
+    await session.flush()
+
+    # Create transaction on account A
+    response = await authenticated_client.post(
+        f"/api/v1/budgets/{budget.id}/transactions",
+        json={
+            "account_id": str(account_a.id),
+            "payee_id": str(payee.id),
+            "date": "2024-06-01",
+            "amount": -5000,
+        },
+    )
+    assert response.status_code == 201
+    txn_id = response.json()["id"]
+
+    await session.refresh(account_a)
+    assert account_a.uncleared_balance == -5000
+
+    # Move transaction to account B
+    response = await authenticated_client.patch(
+        f"/api/v1/budgets/{budget.id}/transactions/{txn_id}",
+        json={"account_id": str(account_b.id)},
+    )
+    assert response.status_code == 200
+
+    await session.refresh(account_a)
+    await session.refresh(account_b)
+    # Account A should be back to 0
+    assert account_a.uncleared_balance == 0
+    assert account_a.cleared_balance == 0
+    # Account B should have the transaction
+    assert account_b.uncleared_balance == -5000
+    assert account_b.cleared_balance == 0
+
+
+async def test_update_transaction_amount_updates_account_balance(
+    authenticated_client: AsyncClient,
+    session: AsyncSession,
+    test_user: User,
+) -> None:
+    """Changing the amount reverses the old and applies the new."""
+    result = await session.execute(
+        select(Budget).where(Budget.owner_id == test_user.id)
+    )
+    budget = result.scalar_one()
+
+    account = Account(
+        budget_id=budget.id,
+        name="Amount Test",
+        account_type=AccountType.CHECKING,
+        include_in_budget=False,
+        cleared_balance=0,
+        uncleared_balance=0,
+    )
+    payee = Payee(budget_id=budget.id, name="Amount Payee")
+    session.add(account)
+    session.add(payee)
+    await session.flush()
+
+    response = await authenticated_client.post(
+        f"/api/v1/budgets/{budget.id}/transactions",
+        json={
+            "account_id": str(account.id),
+            "payee_id": str(payee.id),
+            "date": "2024-06-01",
+            "amount": -3000,
+        },
+    )
+    assert response.status_code == 201
+    txn_id = response.json()["id"]
+
+    await session.refresh(account)
+    assert account.uncleared_balance == -3000
+
+    # Change amount from -3000 to -7000
+    response = await authenticated_client.patch(
+        f"/api/v1/budgets/{budget.id}/transactions/{txn_id}",
+        json={"amount": -7000},
+    )
+    assert response.status_code == 200
+
+    await session.refresh(account)
+    assert account.uncleared_balance == -7000
+    assert account.cleared_balance == 0
+
+
+async def test_update_transaction_account_id_and_amount_and_cleared(
+    authenticated_client: AsyncClient,
+    session: AsyncSession,
+    test_user: User,
+) -> None:
+    """Changing account, amount, and cleared status in one update."""
+    result = await session.execute(
+        select(Budget).where(Budget.owner_id == test_user.id)
+    )
+    budget = result.scalar_one()
+
+    account_a = Account(
+        budget_id=budget.id,
+        name="Combo A",
+        account_type=AccountType.CHECKING,
+        include_in_budget=False,
+        cleared_balance=0,
+        uncleared_balance=0,
+    )
+    account_b = Account(
+        budget_id=budget.id,
+        name="Combo B",
+        account_type=AccountType.CHECKING,
+        include_in_budget=False,
+        cleared_balance=0,
+        uncleared_balance=0,
+    )
+    payee = Payee(budget_id=budget.id, name="Combo Payee")
+    session.add(account_a)
+    session.add(account_b)
+    session.add(payee)
+    await session.flush()
+
+    # Create uncleared transaction on account A
+    response = await authenticated_client.post(
+        f"/api/v1/budgets/{budget.id}/transactions",
+        json={
+            "account_id": str(account_a.id),
+            "payee_id": str(payee.id),
+            "date": "2024-06-01",
+            "amount": -2000,
+        },
+    )
+    assert response.status_code == 201
+    txn_id = response.json()["id"]
+
+    await session.refresh(account_a)
+    assert account_a.uncleared_balance == -2000
+
+    # Move to account B, change amount, and clear — all at once
+    response = await authenticated_client.patch(
+        f"/api/v1/budgets/{budget.id}/transactions/{txn_id}",
+        json={
+            "account_id": str(account_b.id),
+            "amount": -9000,
+            "is_cleared": True,
+        },
+    )
+    assert response.status_code == 200
+
+    await session.refresh(account_a)
+    await session.refresh(account_b)
+    # Account A fully reversed
+    assert account_a.uncleared_balance == 0
+    assert account_a.cleared_balance == 0
+    # Account B has new amount as cleared
+    assert account_b.cleared_balance == -9000
+    assert account_b.uncleared_balance == 0
+
+
+async def test_update_transaction_amount_on_cleared_transaction(
+    authenticated_client: AsyncClient,
+    session: AsyncSession,
+    test_user: User,
+) -> None:
+    """Changing amount on a cleared transaction updates cleared_balance."""
+    result = await session.execute(
+        select(Budget).where(Budget.owner_id == test_user.id)
+    )
+    budget = result.scalar_one()
+
+    account = Account(
+        budget_id=budget.id,
+        name="Cleared Amt",
+        account_type=AccountType.CHECKING,
+        include_in_budget=False,
+        cleared_balance=0,
+        uncleared_balance=0,
+    )
+    payee = Payee(budget_id=budget.id, name="Cleared Amt Payee")
+    session.add(account)
+    session.add(payee)
+    await session.flush()
+
+    # Create a cleared transaction
+    response = await authenticated_client.post(
+        f"/api/v1/budgets/{budget.id}/transactions",
+        json={
+            "account_id": str(account.id),
+            "payee_id": str(payee.id),
+            "date": "2024-06-01",
+            "amount": -4000,
+            "is_cleared": True,
+        },
+    )
+    assert response.status_code == 201
+    txn_id = response.json()["id"]
+
+    await session.refresh(account)
+    assert account.cleared_balance == -4000
+    assert account.uncleared_balance == 0
+
+    # Change amount on cleared transaction
+    response = await authenticated_client.patch(
+        f"/api/v1/budgets/{budget.id}/transactions/{txn_id}",
+        json={"amount": -6000},
+    )
+    assert response.status_code == 200
+
+    await session.refresh(account)
+    assert account.cleared_balance == -6000
+    assert account.uncleared_balance == 0
+
+
+async def test_update_transaction_move_between_cc_accounts_updates_balances(
+    authenticated_client: AsyncClient,
+    session: AsyncSession,
+    test_user: User,
+) -> None:
+    """Moving a transaction between credit card accounts updates both balances."""
+    result = await session.execute(
+        select(Budget).where(Budget.owner_id == test_user.id)
+    )
+    budget = result.scalar_one()
+
+    cc_a = Account(
+        budget_id=budget.id,
+        name="CC A",
+        account_type=AccountType.CREDIT_CARD,
+        include_in_budget=False,
+        cleared_balance=0,
+        uncleared_balance=0,
+    )
+    cc_b = Account(
+        budget_id=budget.id,
+        name="CC B",
+        account_type=AccountType.CREDIT_CARD,
+        include_in_budget=False,
+        cleared_balance=0,
+        uncleared_balance=0,
+    )
+    payee = Payee(budget_id=budget.id, name="CC Payee")
+    session.add(cc_a)
+    session.add(cc_b)
+    session.add(payee)
+    await session.flush()
+
+    response = await authenticated_client.post(
+        f"/api/v1/budgets/{budget.id}/transactions",
+        json={
+            "account_id": str(cc_a.id),
+            "payee_id": str(payee.id),
+            "date": "2024-06-01",
+            "amount": -1500,
+        },
+    )
+    assert response.status_code == 201
+    txn_id = response.json()["id"]
+
+    await session.refresh(cc_a)
+    assert cc_a.uncleared_balance == -1500
+
+    # Move to CC B
+    response = await authenticated_client.patch(
+        f"/api/v1/budgets/{budget.id}/transactions/{txn_id}",
+        json={"account_id": str(cc_b.id)},
+    )
+    assert response.status_code == 200
+
+    await session.refresh(cc_a)
+    await session.refresh(cc_b)
+    assert cc_a.uncleared_balance == 0
+    assert cc_a.cleared_balance == 0
+    assert cc_b.uncleared_balance == -1500
+    assert cc_b.cleared_balance == 0
+
+
+async def test_update_transaction_no_change_does_not_affect_balance(
+    authenticated_client: AsyncClient,
+    session: AsyncSession,
+    test_user: User,
+) -> None:
+    """Re-submitting the same values does not alter account balances."""
+    result = await session.execute(
+        select(Budget).where(Budget.owner_id == test_user.id)
+    )
+    budget = result.scalar_one()
+
+    account = Account(
+        budget_id=budget.id,
+        name="NoOp Account",
+        account_type=AccountType.CHECKING,
+        include_in_budget=False,
+        cleared_balance=0,
+        uncleared_balance=0,
+    )
+    payee = Payee(budget_id=budget.id, name="NoOp Payee")
+    session.add(account)
+    session.add(payee)
+    await session.flush()
+
+    response = await authenticated_client.post(
+        f"/api/v1/budgets/{budget.id}/transactions",
+        json={
+            "account_id": str(account.id),
+            "payee_id": str(payee.id),
+            "date": "2024-06-01",
+            "amount": -2500,
+        },
+    )
+    assert response.status_code == 201
+    txn_id = response.json()["id"]
+
+    await session.refresh(account)
+    assert account.uncleared_balance == -2500
+
+    # Update with the same values
+    response = await authenticated_client.patch(
+        f"/api/v1/budgets/{budget.id}/transactions/{txn_id}",
+        json={
+            "account_id": str(account.id),
+            "amount": -2500,
+            "is_cleared": False,
+        },
+    )
+    assert response.status_code == 200
+
+    await session.refresh(account)
+    assert account.uncleared_balance == -2500
+    assert account.cleared_balance == 0

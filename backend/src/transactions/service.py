@@ -428,7 +428,9 @@ async def update_transaction(
     """
     transaction = await get_transaction_by_id(session, budget_id, transaction_id)
 
-    # Store old is_cleared status for balance adjustment
+    # Store old values for balance adjustment (reverse-and-reapply pattern)
+    old_account_id = transaction.account_id
+    old_amount = transaction.amount
     old_is_cleared = transaction.is_cleared
 
     # Handle allocation updates separately
@@ -438,17 +440,39 @@ async def update_transaction(
     for field, value in update_data.items():
         setattr(transaction, field, value)
 
-    # Handle is_cleared change - move amount between balance fields
-    if "is_cleared" in update_data and old_is_cleared != transaction.is_cleared:
-        account = await get_account_by_id(session, budget_id, transaction.account_id)
-        if transaction.is_cleared:
-            # Moving from uncleared to cleared
-            account.uncleared_balance -= transaction.amount
-            account.cleared_balance += transaction.amount
+    # Handle account balance changes using reverse-and-reapply pattern
+    account_changed = (
+        "account_id" in update_data and old_account_id != transaction.account_id
+    )
+    amount_changed = "amount" in update_data and old_amount != transaction.amount
+    cleared_changed = (
+        "is_cleared" in update_data and old_is_cleared != transaction.is_cleared
+    )
+
+    if account_changed or amount_changed or cleared_changed:
+        if account_changed or amount_changed:
+            # Full reverse-and-reapply: reverse old amount from old account,
+            # apply new amount to new account
+            old_account = await get_account_by_id(session, budget_id, old_account_id)
+            update_account_balance(old_account, -old_amount, old_is_cleared)
+
+            new_account = await get_account_by_id(
+                session, budget_id, transaction.account_id
+            )
+            update_account_balance(
+                new_account, transaction.amount, transaction.is_cleared
+            )
         else:
-            # Moving from cleared to uncleared
-            account.cleared_balance -= transaction.amount
-            account.uncleared_balance += transaction.amount
+            # Only is_cleared changed: move between cleared/uncleared on same account
+            account = await get_account_by_id(
+                session, budget_id, transaction.account_id
+            )
+            if transaction.is_cleared:
+                account.uncleared_balance -= transaction.amount
+                account.cleared_balance += transaction.amount
+            else:
+                account.cleared_balance -= transaction.amount
+                account.uncleared_balance += transaction.amount
 
     # Mark as modified if this is a recurring transaction instance
     if transaction.recurring_transaction_id and (update_data or allocations):
