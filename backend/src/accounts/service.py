@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import case, func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -145,6 +145,61 @@ async def delete_account(
 
     await session.delete(account)
     await session.flush()
+
+
+async def check_account_balance_integrity(
+    session: AsyncSession, budget_id: UUID
+) -> bool:
+    """Check if any account balance is out of sync with its transactions.
+
+    Uses a single query for efficiency — no per-account loop.
+    Returns True if any account has mismatched balances.
+    """
+    expected = (
+        select(
+            Transaction.account_id,
+            func.coalesce(
+                func.sum(
+                    case(
+                        (Transaction.is_cleared == True, Transaction.amount),  # noqa: E712
+                        else_=0,
+                    )
+                ),
+                0,
+            ).label("expected_cleared"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (Transaction.is_cleared == False, Transaction.amount),  # noqa: E712
+                        else_=0,
+                    )
+                ),
+                0,
+            ).label("expected_uncleared"),
+        )
+        .where(
+            Transaction.budget_id == budget_id,
+            Transaction.status == TransactionStatus.POSTED,
+        )
+        .group_by(Transaction.account_id)
+        .subquery()
+    )
+
+    result = await session.execute(
+        select(func.count())
+        .select_from(Account)
+        .outerjoin(expected, Account.id == expected.c.account_id)
+        .where(
+            Account.budget_id == budget_id,
+            or_(
+                Account.cleared_balance
+                != func.coalesce(expected.c.expected_cleared, 0),
+                Account.uncleared_balance
+                != func.coalesce(expected.c.expected_uncleared, 0),
+            ),
+        )
+    )
+    return result.scalar_one() > 0
 
 
 async def recalculate_account_balances(

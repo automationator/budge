@@ -77,6 +77,16 @@ export async function updateMemberRole(
   return response.data
 }
 
+// Balance integrity check
+export interface BalanceCheckResponse {
+  needs_repair: boolean
+}
+
+export async function checkBalanceIntegrity(budgetId: string): Promise<BalanceCheckResponse> {
+  const response = await apiClient.get<BalanceCheckResponse>(`/budgets/${budgetId}/balance-check`)
+  return response.data
+}
+
 // Data export/import types
 export interface ExportData {
   version: string

@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -782,6 +782,40 @@ async def get_envelope_activity(
         "items": items,
         "total": total,
     }
+
+
+async def check_envelope_balance_integrity(
+    session: AsyncSession, budget_id: UUID
+) -> bool:
+    """Check if any non-unallocated envelope balance is out of sync with its allocations.
+
+    Uses a single query for efficiency — no per-envelope loop.
+    Returns True if any envelope has mismatched balances.
+    """
+    expected = (
+        select(
+            Allocation.envelope_id,
+            func.coalesce(func.sum(Allocation.amount), 0).label("expected_balance"),
+        )
+        .where(Allocation.budget_id == budget_id)
+        .group_by(Allocation.envelope_id)
+        .subquery()
+    )
+
+    result = await session.execute(
+        select(func.count())
+        .select_from(Envelope)
+        .outerjoin(expected, Envelope.id == expected.c.envelope_id)
+        .where(
+            Envelope.budget_id == budget_id,
+            Envelope.is_unallocated == False,  # noqa: E712
+            or_(
+                Envelope.current_balance
+                != func.coalesce(expected.c.expected_balance, 0),
+            ),
+        )
+    )
+    return result.scalar_one() > 0
 
 
 async def recalculate_envelope_balances(

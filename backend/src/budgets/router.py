@@ -10,6 +10,7 @@ from src.budgets.dependencies import BudgetContext, BudgetSecurity
 from src.budgets.exceptions import UserNotBudgetMemberError
 from src.budgets.schemas import (
     AddMemberRequest,
+    BalanceCheckResponse,
     BudgetMemberWithRoleResponse,
     BudgetResponse,
     CreateBudgetRequest,
@@ -87,6 +88,22 @@ async def delete_budget(
         raise UnauthorizedError("Invalid password")
 
     await service.delete_budget(session, ctx.budget.id)
+
+
+@router.get("/{budget_id}/balance-check", response_model=BalanceCheckResponse)
+async def check_balance_integrity(
+    ctx: Annotated[
+        BudgetContext, Security(BudgetSecurity(), scopes=[BudgetScope.BUDGET_READ])
+    ],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> BalanceCheckResponse:
+    """Check if any account or envelope balances need repair."""
+    from src.accounts.service import check_account_balance_integrity
+    from src.envelopes.service import check_envelope_balance_integrity
+
+    accounts_bad = await check_account_balance_integrity(session, ctx.budget.id)
+    envelopes_bad = await check_envelope_balance_integrity(session, ctx.budget.id)
+    return BalanceCheckResponse(needs_repair=accounts_bad or envelopes_bad)
 
 
 @router.get(

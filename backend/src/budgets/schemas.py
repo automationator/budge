@@ -61,6 +61,10 @@ class MemberScopesResponse(BaseModel):
     effective_scopes: list[str]
 
 
+class BalanceCheckResponse(BaseModel):
+    needs_repair: bool
+
+
 class BudgetResponse(BaseModel):
     id: UUID
     name: str

@@ -10,6 +10,7 @@ import MoneyDisplay from '@/components/common/MoneyDisplay.vue'
 import MoneyInput from '@/components/common/MoneyInput.vue'
 import AllocationRuleForm from '@/components/allocation-rules/AllocationRuleForm.vue'
 import OverspentAlert from '@/components/envelopes/OverspentAlert.vue'
+import BalanceRepairAlert from '@/components/envelopes/BalanceRepairAlert.vue'
 import EnvelopeSelect from '@/components/common/EnvelopeSelect.vue'
 import DateRangePicker from '@/components/common/DateRangePicker.vue'
 import EnvelopeActivityDialog from '@/components/envelopes/EnvelopeActivityDialog.vue'
@@ -18,6 +19,9 @@ import EnvelopeActionSheet from '@/components/envelopes/EnvelopeActionSheet.vue'
 import type { AllocationRuleFormData } from '@/components/allocation-rules/AllocationRuleForm.vue'
 import type { EnvelopeBudgetItem } from '@/api/envelopes'
 import { previewAllocationRules, applyAllocationRules } from '@/api/allocationRules'
+import { checkBalanceIntegrity } from '@/api/budgets'
+import { recalculateBalances } from '@/api/accounts'
+import { recalculateEnvelopeBalances } from '@/api/envelopes'
 import { openNewTransaction } from '@/composables/useGlobalTransactionDialog'
 import type { Envelope } from '@/types'
 import type { RulePreviewResponse } from '@/api/allocationRules'
@@ -92,6 +96,10 @@ const showActionSheet = ref(false)
 const actionSheetEnvelope = ref<EnvelopeBudgetItem | null>(null)
 const isMobile = ref(false)
 
+// Balance repair state
+const needsRepair = ref(false)
+const repairing = ref(false)
+
 // Detect mobile viewport
 function checkMobile() {
   isMobile.value = window.innerWidth <= 600
@@ -117,10 +125,16 @@ onMounted(async () => {
   }
 
   try {
+    const budgetId = authStore.currentBudgetId
     await Promise.all([
       envelopesStore.fetchEnvelopes(),
       allocationRulesStore.fetchAllocationRules(),
       envelopesStore.fetchBudgetSummary(),
+      budgetId
+        ? checkBalanceIntegrity(budgetId).then((r) => {
+            needsRepair.value = r.needs_repair
+          })
+        : Promise.resolve(),
     ])
   } catch {
     showSnackbar('Failed to load data', 'error')
@@ -684,6 +698,30 @@ function handleActionSheetViewDetails() {
   }
   showActionSheet.value = false
 }
+
+async function handleRepair() {
+  const budgetId = authStore.currentBudgetId
+  if (!budgetId) return
+
+  try {
+    repairing.value = true
+    await recalculateBalances(budgetId)
+    await recalculateEnvelopeBalances(budgetId)
+    showSnackbar('Balances repaired successfully')
+
+    // Re-check and refresh data
+    const [checkResult] = await Promise.all([
+      checkBalanceIntegrity(budgetId),
+      envelopesStore.fetchEnvelopes(),
+      envelopesStore.fetchBudgetSummary(),
+    ])
+    needsRepair.value = checkResult.needs_repair
+  } catch {
+    showSnackbar('Failed to repair balances', 'error')
+  } finally {
+    repairing.value = false
+  }
+}
 </script>
 
 <template>
@@ -742,6 +780,13 @@ function handleActionSheetViewDetails() {
         @update:custom-range="handleCustomDateRange"
       />
     </div>
+
+    <!-- Balance Repair Alert -->
+    <BalanceRepairAlert
+      :needs-repair="needsRepair"
+      :loading="repairing"
+      @repair="handleRepair"
+    />
 
     <!-- Unallocated Balance Card -->
     <v-card
