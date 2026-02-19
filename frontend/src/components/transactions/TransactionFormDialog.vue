@@ -42,6 +42,10 @@ const allocationRulesStore = useAllocationRulesStore()
 const authStore = useAuthStore()
 const { mobile } = useDisplay()
 
+const fieldDensity = computed(() => mobile.value ? 'compact' as const : 'default' as const)
+const fieldSpacing = computed(() => mobile.value ? 'mt-1' : 'mt-2')
+const fieldHideDetails = computed(() => mobile.value ? 'auto' as const : false as const)
+
 const isEditing = computed(() => !!props.transactionId)
 
 // Form state
@@ -625,7 +629,7 @@ async function handleDelete() {
     :fullscreen="mobile"
     :max-width="mobile ? undefined : 600"
   >
-    <v-card>
+    <v-card :class="{ 'd-flex flex-column': mobile }">
       <v-card-title class="d-flex align-center">
         <span>{{ dialogTitle }}</span>
         <v-spacer />
@@ -660,7 +664,7 @@ async function handleDelete() {
         </v-tab>
       </v-tabs>
 
-      <v-card-text>
+      <v-card-text :class="{ 'mobile-form-scroll': mobile }">
         <v-form
           v-model="formValid"
           @submit.prevent="handleSubmit(false)"
@@ -683,6 +687,8 @@ async function handleDelete() {
               label="Account"
               :rules="required"
               :disabled="loading"
+              :density="fieldDensity"
+              :hide-details="fieldHideDetails"
             />
 
             <!-- Payee (only for non-adjustment transactions) -->
@@ -691,13 +697,15 @@ async function handleDelete() {
               v-model="payeeId"
               :rules="required"
               :disabled="loading"
-              class="mt-2"
+              :class="fieldSpacing"
+              :density="fieldDensity"
+              :hide-details="fieldHideDetails"
               clearable
             />
 
             <!-- Envelope Selection (for budget accounts) -->
             <template v-if="isInBudgetAccount && !isAdjustment">
-              <div class="d-flex align-center justify-space-between mt-2 mb-2">
+              <div :class="['d-flex align-center justify-space-between', fieldSpacing, mobile ? 'mb-1' : 'mb-2']">
                 <span class="text-subtitle-1 font-weight-medium">{{ envelopeLabel }}</span>
                 <v-btn
                   v-if="!isSplitMode && !showIncomeAllocationOptions"
@@ -747,6 +755,8 @@ async function handleDelete() {
                   v-model="selectedEnvelopeId"
                   :label="envelopeLabel"
                   :disabled="loading"
+                  :density="fieldDensity"
+                  :hide-details="fieldHideDetails"
                   clearable
                   include-unallocated
                 />
@@ -758,6 +768,8 @@ async function handleDelete() {
                   v-model="selectedEnvelopeId"
                   :label="envelopeLabel"
                   :disabled="loading"
+                  :density="fieldDensity"
+                  :hide-details="fieldHideDetails"
                   :clearable="!isEnvelopeRequired"
                   :rules="isEnvelopeRequired ? required : []"
                   :include-unallocated="!isEnvelopeRequired"
@@ -842,30 +854,38 @@ async function handleDelete() {
               </template>
             </template>
 
-            <!-- Date -->
-            <v-text-field
-              v-model="date"
-              label="Date"
-              type="date"
-              :rules="required"
-              :disabled="loading"
-              class="mt-2"
-            />
-
-            <!-- Amount with expense/income toggle -->
-            <MoneyInput
-              v-model="amount"
-              v-model:is-expense="isExpense"
-              :disabled="loading"
-              class="mt-2"
-            />
+            <!-- Date and Amount -->
+            <v-row :class="fieldSpacing" dense>
+              <v-col :cols="mobile ? 6 : 12">
+                <v-text-field
+                  v-model="date"
+                  label="Date"
+                  type="date"
+                  :rules="required"
+                  :disabled="loading"
+                  :density="fieldDensity"
+                  :hide-details="fieldHideDetails"
+                />
+              </v-col>
+              <v-col :cols="mobile ? 6 : 12" :class="mobile ? '' : fieldSpacing">
+                <MoneyInput
+                  v-model="amount"
+                  v-model:is-expense="isExpense"
+                  :disabled="loading"
+                  :density="fieldDensity"
+                  :hide-details="fieldHideDetails"
+                />
+              </v-col>
+            </v-row>
 
             <!-- Memo -->
             <v-text-field
               v-model="memo"
               label="Memo (optional)"
               :disabled="loading"
-              class="mt-2"
+              :class="fieldSpacing"
+              :density="fieldDensity"
+              :hide-details="fieldHideDetails"
             />
 
             <!-- Location -->
@@ -874,7 +894,9 @@ async function handleDelete() {
               label="Location (optional)"
               clearable
               :disabled="loading"
-              class="mt-2"
+              :class="fieldSpacing"
+              :density="fieldDensity"
+              :hide-details="fieldHideDetails"
             />
           </template>
 
@@ -885,6 +907,8 @@ async function handleDelete() {
               label="From Account"
               :rules="required"
               :disabled="loading"
+              :density="fieldDensity"
+              :hide-details="fieldHideDetails"
             />
 
             <AccountSelect
@@ -893,7 +917,9 @@ async function handleDelete() {
               :exclude-ids="sourceAccountId ? [sourceAccountId] : []"
               :rules="required"
               :disabled="loading || !sourceAccountId"
-              class="mt-2"
+              :class="fieldSpacing"
+              :density="fieldDensity"
+              :hide-details="fieldHideDetails"
             />
 
             <!-- Envelope (for budget -> tracking transfers) -->
@@ -903,39 +929,50 @@ async function handleDelete() {
               label="Envelope"
               :rules="required"
               :disabled="loading"
-              class="mt-2"
+              :class="fieldSpacing"
+              :density="fieldDensity"
+              :hide-details="fieldHideDetails"
               hint="Which envelope is this money coming from?"
               persistent-hint
             />
 
-            <!-- Date -->
-            <v-text-field
-              v-model="date"
-              label="Date"
-              type="date"
-              :rules="required"
-              :disabled="loading"
-              class="mt-2"
-            />
-
-            <MoneyInput
-              v-model="amount"
-              :disabled="loading"
-              class="mt-2"
-            />
+            <!-- Date and Amount -->
+            <v-row :class="fieldSpacing" dense>
+              <v-col :cols="mobile ? 6 : 12">
+                <v-text-field
+                  v-model="date"
+                  label="Date"
+                  type="date"
+                  :rules="required"
+                  :disabled="loading"
+                  :density="fieldDensity"
+                  :hide-details="fieldHideDetails"
+                />
+              </v-col>
+              <v-col :cols="mobile ? 6 : 12" :class="mobile ? '' : fieldSpacing">
+                <MoneyInput
+                  v-model="amount"
+                  :disabled="loading"
+                  :density="fieldDensity"
+                  :hide-details="fieldHideDetails"
+                />
+              </v-col>
+            </v-row>
 
             <!-- Memo -->
             <v-text-field
               v-model="memo"
               label="Memo (optional)"
               :disabled="loading"
-              class="mt-2"
+              :class="fieldSpacing"
+              :density="fieldDensity"
+              :hide-details="fieldHideDetails"
             />
           </template>
         </v-form>
       </v-card-text>
 
-      <v-card-actions class="justify-end">
+      <v-card-actions :class="['justify-end', { 'mobile-sticky-actions': mobile }]">
         <v-btn
           v-if="isEditing"
           color="error"
@@ -1059,6 +1096,24 @@ async function handleDelete() {
 </template>
 
 <style>
+/* Mobile transaction form compact layout */
+.mobile-form-scroll {
+  overflow-y: auto;
+  flex: 1 1 0;
+  min-height: 0;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.mobile-sticky-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background: rgb(var(--v-theme-surface));
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Improve disabled button visibility in dark mode */
 /* Dialog renders in overlay container - target via theme class on overlay */
 

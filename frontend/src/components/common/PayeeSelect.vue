@@ -38,6 +38,15 @@ const payeesStore = usePayeesStore()
 // Search state
 const payeeSearch = ref('')
 
+function titleCase(str: string): string {
+  return str.replace(/\S+/g, (word) => {
+    if (word === word.toLowerCase()) {
+      return word.charAt(0).toUpperCase() + word.slice(1)
+    }
+    return word
+  })
+}
+
 // Create state
 const creating = ref(false)
 
@@ -70,7 +79,7 @@ async function createNewPayee() {
 
   try {
     creating.value = true
-    const payee = await payeesStore.createPayee({ name: payeeSearch.value.trim() })
+    const payee = await payeesStore.createPayee({ name: titleCase(payeeSearch.value.trim()) })
     selectedValue.value = payee.id
     payeeSearch.value = ''
     // Close the dropdown menu
@@ -97,6 +106,7 @@ async function createNewPayee() {
     :density="density"
     :hide-details="hideDetails"
     :rules="rules"
+    autocapitalize="words"
     auto-select-first
   >
     <template #no-data>
@@ -111,7 +121,7 @@ async function createNewPayee() {
           >
             mdi-plus
           </v-icon>
-          Create "{{ payeeSearch }}"
+          Create "{{ titleCase(payeeSearch) }}"
         </v-list-item-title>
       </v-list-item>
       <v-list-item v-else>
@@ -130,9 +140,10 @@ async function createNewPayee() {
           >
             mdi-plus
           </v-icon>
-          Create "{{ payeeSearch }}"
+          Create "{{ titleCase(payeeSearch) }}"
         </v-list-item-title>
       </v-list-item>
     </template>
   </v-autocomplete>
 </template>
+
