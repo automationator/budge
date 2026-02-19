@@ -10,7 +10,7 @@ async def test_create_user(client: AsyncClient) -> None:
         "/api/v1/users",
         json={
             "username": "testcreate",
-            "password": "password123",
+            "password": "Password123!",
         },
     )
     assert response.status_code == 201
@@ -32,6 +32,41 @@ async def test_create_user_short_password(client: AsyncClient) -> None:
         },
     )
     assert response.status_code == 422
+
+
+async def test_create_user_weak_password_no_uppercase(client: AsyncClient) -> None:
+    response = await client.post(
+        "/api/v1/users",
+        json={"username": "weakuser1", "password": "password123!"},
+    )
+    assert response.status_code == 422
+
+
+async def test_create_user_weak_password_no_digit(client: AsyncClient) -> None:
+    response = await client.post(
+        "/api/v1/users",
+        json={"username": "weakuser2", "password": "Password!!x"},
+    )
+    assert response.status_code == 422
+
+
+async def test_create_user_weak_password_no_special(client: AsyncClient) -> None:
+    response = await client.post(
+        "/api/v1/users",
+        json={"username": "weakuser3", "password": "Password123"},
+    )
+    assert response.status_code == 422
+
+
+async def test_update_me_ignores_is_active(
+    authenticated_client: AsyncClient,
+) -> None:
+    response = await authenticated_client.patch(
+        "/api/v1/users/me",
+        json={"is_active": False},
+    )
+    assert response.status_code == 200
+    assert response.json()["is_active"] is True
 
 
 async def test_get_me(authenticated_client: AsyncClient, test_user: User) -> None:

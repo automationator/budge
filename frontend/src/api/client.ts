@@ -1,69 +1,30 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import axios, { type AxiosError } from 'axios'
 import type { ApiError } from '@/types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
-// Create axios instance
+// Create axios instance with credentials for httpOnly cookies
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 })
 
-// Token storage - both tokens persisted in localStorage for session persistence
-const ACCESS_TOKEN_KEY = 'budge_access_token'
-const REFRESH_TOKEN_KEY = 'budge_refresh_token'
-
-export function setAccessToken(token: string | null) {
-  if (token) {
-    localStorage.setItem(ACCESS_TOKEN_KEY, token)
-  } else {
-    localStorage.removeItem(ACCESS_TOKEN_KEY)
-  }
-}
-
-export function getAccessToken(): string | null {
-  return localStorage.getItem(ACCESS_TOKEN_KEY)
-}
-
-export function setRefreshToken(token: string | null) {
-  if (token) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, token)
-  } else {
-    localStorage.removeItem(REFRESH_TOKEN_KEY)
-  }
-}
-
-export function getRefreshToken(): string | null {
-  return localStorage.getItem(REFRESH_TOKEN_KEY)
-}
-
-// Request interceptor - add auth token
-apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = getAccessToken()
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// Response interceptor - handle 401 and token refresh
+// Response interceptor - handle 401 and token refresh via cookies
 let isRefreshing = false
 let failedQueue: Array<{
-  resolve: (token: string) => void
+  resolve: () => void
   reject: (error: unknown) => void
 }> = []
 
-const processQueue = (error: unknown, token: string | null = null) => {
+const processQueue = (error: unknown) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error)
-    } else if (token) {
-      prom.resolve(token)
+    } else {
+      prom.resolve()
     }
   })
   failedQueue = []
@@ -74,57 +35,32 @@ apiClient.interceptors.response.use(
   async (error: AxiosError<ApiError>) => {
     const originalRequest = error.config
 
-    // If 401 and we have a refresh token, try to refresh
+    // If 401 and not already retrying, try to refresh via cookie
     if (error.response?.status === 401 && originalRequest && !originalRequest.headers['X-Retry']) {
-      const refreshToken = getRefreshToken()
-
-      if (!refreshToken) {
-        // No refresh token, clear everything and reject
-        setAccessToken(null)
-        setRefreshToken(null)
-        return Promise.reject(error)
-      }
-
       if (isRefreshing) {
         // Wait for the refresh to complete
         return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`
-            }
-            return apiClient(originalRequest)
+          failedQueue.push({
+            resolve: () => resolve(apiClient(originalRequest)),
+            reject,
           })
-          .catch((err) => Promise.reject(err))
+        })
       }
 
       isRefreshing = true
       originalRequest.headers['X-Retry'] = 'true'
 
       try {
-        // Call refresh endpoint
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refresh_token: refreshToken,
+        // Call refresh endpoint — cookie sent automatically
+        await axios.post(`${API_BASE_URL}/auth/refresh`, null, {
+          withCredentials: true,
         })
 
-        const newAccessToken = response.data.access_token
-        const newRefreshToken = response.data.refresh_token
-
-        setAccessToken(newAccessToken)
-        setRefreshToken(newRefreshToken)
-
-        processQueue(null, newAccessToken)
-
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
-        }
+        processQueue(null)
 
         return apiClient(originalRequest)
       } catch (refreshError) {
-        processQueue(refreshError, null)
-        setAccessToken(null)
-        setRefreshToken(null)
+        processQueue(refreshError)
         // Redirect to login will be handled by the auth store
         return Promise.reject(refreshError)
       } finally {

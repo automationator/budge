@@ -5,7 +5,6 @@ import type {
   Envelope,
   Transaction,
   Payee,
-  LoginResponse,
   CursorPage,
   AllocationRule,
   Allocation,
@@ -112,13 +111,6 @@ export const factories = {
     date: '2024-01-15',
     created_at: '2024-01-15T00:00:00Z',
     updated_at: null,
-    ...overrides,
-  }),
-
-  loginResponse: (overrides: Partial<LoginResponse> = {}): LoginResponse => ({
-    access_token: 'test-access-token',
-    refresh_token: 'test-refresh-token',
-    token_type: 'bearer',
     ...overrides,
   }),
 

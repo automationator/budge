@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.accounts.router import router as accounts_router
@@ -21,6 +23,7 @@ from src.logging import get_logger, setup_logging
 from src.notifications.router import router as notifications_router
 from src.payees.router import router as payees_router
 from src.public.router import router as public_router
+from src.rate_limit import limiter
 from src.recurring_transactions.router import router as recurring_transactions_router
 from src.reports.router import router as reports_router
 from src.start_fresh.router import router as start_fresh_router
@@ -29,6 +32,21 @@ from src.users.router import router as users_router
 
 setup_logging()
 logger = get_logger(__name__)
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Adds security headers to all responses."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        if settings.env == "production":
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=63072000; includeSubDomains"
+            )
+        return response
 
 
 class E2ESchemaMiddleware(BaseHTTPMiddleware):
@@ -67,6 +85,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins + settings.extra_cors_origins,
@@ -74,6 +95,8 @@ app.add_middleware(
     allow_methods=settings.cors_allow_methods,
     allow_headers=settings.cors_allow_headers,
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Add E2E schema middleware (only has effect when ENV=e2e)
 if settings.env == "e2e":

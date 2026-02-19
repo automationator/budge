@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest'
 import { setActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { createTestPinia, factories } from '@test/setup'
-import { setAccessToken, setRefreshToken, getRefreshToken } from '@/api/client'
 
 // Mock the router
 vi.mock('@/router', () => ({
@@ -36,12 +35,10 @@ import * as budgetsApi from '@/api/budgets'
 describe('useAuthStore', () => {
   beforeEach(() => {
     setActivePinia(createTestPinia())
-    setAccessToken(null)
-    setRefreshToken(null)
     vi.clearAllMocks()
 
     // Set up default mock implementations
-    ;(authApi.login as Mock).mockResolvedValue(factories.loginResponse())
+    ;(authApi.login as Mock).mockResolvedValue(undefined)
     ;(authApi.getCurrentUser as Mock).mockResolvedValue(factories.user())
     ;(authApi.logout as Mock).mockResolvedValue(undefined)
     ;(authApi.register as Mock).mockResolvedValue(factories.user())
@@ -167,13 +164,13 @@ describe('useAuthStore', () => {
       expect(store.isAuthenticated).toBe(false)
     })
 
-    it('clears tokens', async () => {
+    it('calls logout API', async () => {
       const store = useAuthStore()
       await store.login('testuser', 'password')
 
       await store.logout()
 
-      expect(getRefreshToken()).toBeNull()
+      expect(authApi.logout).toHaveBeenCalled()
     })
 
     it('handles logout API errors gracefully', async () => {
@@ -212,10 +209,7 @@ describe('useAuthStore', () => {
   })
 
   describe('initialize', () => {
-    it('restores session from refresh token', async () => {
-      // Set a refresh token to simulate stored session
-      setRefreshToken('valid-refresh-token')
-
+    it('restores session when cookies are valid', async () => {
       const store = useAuthStore()
       await store.initialize()
 
@@ -224,7 +218,9 @@ describe('useAuthStore', () => {
       expect(store.user).toBeDefined()
     })
 
-    it('clears state when no refresh token', async () => {
+    it('clears state when no valid session', async () => {
+      ;(authApi.getCurrentUser as Mock).mockRejectedValue(new Error('Unauthorized'))
+
       const store = useAuthStore()
       await store.initialize()
 
@@ -234,26 +230,13 @@ describe('useAuthStore', () => {
     })
 
     it('only initializes once', async () => {
-      setRefreshToken('valid-refresh-token')
-
       const store = useAuthStore()
       await store.initialize()
       await store.initialize()
 
       // Should have only called the API once
+      expect(authApi.getCurrentUser).toHaveBeenCalledTimes(1)
       expect(store.initialized).toBe(true)
-    })
-
-    it('clears tokens on invalid refresh token', async () => {
-      setRefreshToken('invalid-refresh-token')
-      ;(authApi.getCurrentUser as Mock).mockRejectedValue(new Error('Invalid token'))
-
-      const store = useAuthStore()
-      await store.initialize()
-
-      expect(store.initialized).toBe(true)
-      expect(store.isAuthenticated).toBe(false)
-      expect(getRefreshToken()).toBeNull()
     })
   })
 

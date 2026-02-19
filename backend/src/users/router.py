@@ -1,11 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dependencies import get_current_active_user
 from src.database import get_async_session
 from src.exceptions import UnauthorizedError
+from src.rate_limit import limiter
 from src.start_fresh import service as start_fresh_service
 from src.start_fresh.schemas import (
     DataCategory,
@@ -23,7 +24,9 @@ CurrentUser = Annotated[User, Depends(get_current_active_user)]
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
 async def create_user(
+    request: Request,  # noqa: ARG001 - required by slowapi limiter
     user_in: UserCreate,
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> User:

@@ -182,8 +182,6 @@ export function mountView<T extends Component>(
   const authStore = useAuthStore(context.pinia)
   authStore.currentBudgetId = budgetId ?? 'budget-1'
   authStore.user = { id: 'user-1', username: 'testuser', is_active: true, is_admin: false, created_at: '2024-01-01T00:00:00Z', updated_at: null }
-  // Set access token in localStorage so API client attaches it
-  localStorage.setItem('budge_access_token', 'test-access-token')
 
   return {
     wrapper: mount(component, {

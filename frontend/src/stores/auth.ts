@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import type { User, Budget, BudgetMembership } from '@/types'
 import { login as apiLogin, logout as apiLogout, getCurrentUser, register as apiRegister, updateCurrentUser } from '@/api/auth'
 import type { UserUpdate } from '@/types'
-import { setAccessToken, setRefreshToken, getRefreshToken } from '@/api/client'
 import { getMyBudgets, createBudget as apiCreateBudget } from '@/api/budgets'
 import router from '@/router'
 
@@ -25,15 +24,9 @@ export const useAuthStore = defineStore('auth', () => {
   async function initialize() {
     if (initialized.value) return
 
-    const refreshToken = getRefreshToken()
-    if (!refreshToken) {
-      initialized.value = true
-      return
-    }
-
     try {
       loading.value = true
-      // Try to get current user - the interceptor will handle token refresh
+      // Try to get current user — if cookies exist, it succeeds; if not, it 401s
       user.value = await getCurrentUser()
 
       // Load budgets
@@ -41,9 +34,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       initialized.value = true
     } catch {
-      // Token invalid, clear everything
-      setAccessToken(null)
-      setRefreshToken(null)
+      // No valid session
       user.value = null
       initialized.value = true
     } finally {
@@ -56,10 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = true
       error.value = null
 
-      const response = await apiLogin({ username, password })
-
-      setAccessToken(response.access_token)
-      setRefreshToken(response.refresh_token)
+      await apiLogin({ username, password })
 
       user.value = await getCurrentUser()
 
@@ -99,15 +87,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     try {
-      const refreshToken = getRefreshToken()
-      if (refreshToken) {
-        await apiLogout(refreshToken)
-      }
+      await apiLogout()
     } catch {
       // Ignore logout errors
     } finally {
-      setAccessToken(null)
-      setRefreshToken(null)
       user.value = null
       budgets.value = []
       currentBudgetId.value = null

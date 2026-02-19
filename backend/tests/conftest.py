@@ -78,6 +78,7 @@ async def client(
     """Function-scoped client without authentication."""
     app.dependency_overrides[get_async_session] = lambda: session
     _async_client.headers.pop("Authorization", None)
+    _async_client.cookies.clear()
     yield _async_client
     app.dependency_overrides.clear()
 

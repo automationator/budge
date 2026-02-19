@@ -15,6 +15,10 @@ const rules = {
   required: (v: string) => !!v || 'Required',
   username: (v: string) => (v.length >= 3 && v.length <= 50) || 'Username must be 3-50 characters',
   minLength: (v: string) => v.length >= 8 || 'Minimum 8 characters',
+  hasUppercase: (v: string) => /[A-Z]/.test(v) || 'Must contain an uppercase letter',
+  hasLowercase: (v: string) => /[a-z]/.test(v) || 'Must contain a lowercase letter',
+  hasDigit: (v: string) => /\d/.test(v) || 'Must contain a digit',
+  hasSpecial: (v: string) => /[^A-Za-z0-9]/.test(v) || 'Must contain a special character',
   passwordMatch: () => password.value === confirmPassword.value || 'Passwords must match',
 }
 
@@ -77,7 +81,7 @@ async function handleRegister() {
                 prepend-icon="mdi-lock"
                 :type="showPassword ? 'text' : 'password'"
                 :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                :rules="[rules.required, rules.minLength]"
+                :rules="[rules.required, rules.minLength, rules.hasUppercase, rules.hasLowercase, rules.hasDigit, rules.hasSpecial]"
                 autocomplete="new-password"
                 @click:append="showPassword = !showPassword"
               />

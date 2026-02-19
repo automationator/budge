@@ -18,8 +18,19 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
     extra_cors_origins: list[str] = []  # Additional origins (e.g., Tailscale hostname)
     cors_allow_credentials: bool = True
-    cors_allow_methods: list[str] = ["*"]
-    cors_allow_headers: list[str] = ["*"]
+    cors_allow_methods: list[str] = [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS",
+    ]
+    cors_allow_headers: list[str] = [
+        "Authorization",
+        "Content-Type",
+        "X-E2E-Schema",
+    ]
 
     # Logging
     log_level: str = "INFO"
@@ -52,7 +63,14 @@ class Settings(BaseSettings):
     app_version: str = "dev"
     github_repo: str = "automationator/budge"
 
+    # Cookies
+    cookie_secure: bool = False  # True in production for HTTPS
+    cookie_samesite: str = "lax"
+    cookie_domain: str | None = None
+    cookie_path: str = "/"
+
     # Database
+    postgres_ssl: bool = False
     postgres_user: str = "budge"
     postgres_password: str = "budge"
     postgres_host: str = "localhost"

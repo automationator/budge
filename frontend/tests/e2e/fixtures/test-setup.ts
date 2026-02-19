@@ -46,7 +46,7 @@ interface TestFixtures {
   testContext: TestContext
 
   /**
-   * Pre-authenticated browser context with localStorage set up.
+   * Pre-authenticated browser context with httpOnly cookies set up.
    */
   authenticatedContext: BrowserContext
 
@@ -106,25 +106,43 @@ export const test = base.extend<TestFixtures>({
   },
 
   /**
-   * Authenticated browser context with localStorage pre-configured.
+   * Authenticated browser context with httpOnly cookies pre-configured.
    * Creates a new context for each test.
    */
   authenticatedContext: async ({ browser, testContext }, use) => {
+    // Cookie expiry: 30 minutes from now
+    const accessExpiry = Math.floor(Date.now() / 1000) + 30 * 60
+    // Refresh cookie expiry: 7 days from now
+    const refreshExpiry = Math.floor(Date.now() / 1000) + 7 * 86400
+
     const context = await browser.newContext({
       storageState: {
-        cookies: [],
+        cookies: [
+          {
+            name: 'access_token',
+            value: testContext.user.accessToken,
+            domain: 'localhost',
+            path: '/',
+            httpOnly: true,
+            secure: false,
+            sameSite: 'Lax',
+            expires: accessExpiry,
+          },
+          {
+            name: 'refresh_token',
+            value: testContext.user.refreshToken,
+            domain: 'localhost',
+            path: '/api/v1/auth',
+            httpOnly: true,
+            secure: false,
+            sameSite: 'Lax',
+            expires: refreshExpiry,
+          },
+        ],
         origins: [
           {
             origin: 'http://localhost:5173',
             localStorage: [
-              {
-                name: 'budge_access_token',
-                value: testContext.user.accessToken,
-              },
-              {
-                name: 'budge_refresh_token',
-                value: testContext.user.refreshToken,
-              },
               {
                 name: 'budge_current_budget',
                 value: testContext.user.budgetId,

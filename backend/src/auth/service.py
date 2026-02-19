@@ -2,6 +2,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+import bcrypt
 from jose import jwt
 from jose.exceptions import JWTError
 from sqlalchemy import select
@@ -12,6 +13,11 @@ from src.auth.schemas import TokenData
 from src.config import settings
 from src.users.models import User
 from src.users.service import get_user_by_id, get_user_by_username, verify_password
+
+# Pre-computed dummy hash for timing-safe authentication.
+# When a user doesn't exist, we still run bcrypt comparison against this
+# to prevent timing attacks that reveal whether a username exists.
+_DUMMY_HASH = bcrypt.hashpw(b"dummy", bcrypt.gensalt()).decode()
 
 
 def create_access_token(user_id: UUID, expires_delta: timedelta | None = None) -> str:
@@ -46,6 +52,8 @@ async def authenticate_user(
 ) -> User | None:
     user = await get_user_by_username(session, username)
     if not user:
+        # Perform a dummy password check to equalize timing
+        verify_password(password, _DUMMY_HASH)
         return None
     if not verify_password(password, user.hashed_password):
         return None

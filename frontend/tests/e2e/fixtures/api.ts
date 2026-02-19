@@ -62,16 +62,12 @@ export class ApiHelper {
     // Use page.evaluate to make the request with the app's auth context
     const result = await this.page.evaluate(
       async ({ url, method, body, baseUrl }) => {
-        // Get the access token from memory via the api client module
-        // @ts-expect-error - accessing window's module scope
-        const token = window.__budge_access_token || localStorage.getItem('budge_access_token')
-
         const response = await fetch(`${baseUrl}${url}`, {
           method,
           headers: {
             'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
           },
+          credentials: 'include',
           body: body ? JSON.stringify(body) : undefined,
         })
 

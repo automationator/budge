@@ -29,7 +29,7 @@ export const handlers = [
   http.post(`${API_BASE}/auth/login`, async ({ request }) => {
     const body = (await request.json()) as { username: string; password: string }
     if (body.username === 'testuser' && body.password === 'password') {
-      return HttpResponse.json(factories.loginResponse())
+      return HttpResponse.json({ access_token: 'test', refresh_token: 'test', token_type: 'bearer' })
     }
     return HttpResponse.json({ detail: 'Invalid credentials' }, { status: 401 })
   }),
@@ -43,15 +43,12 @@ export const handlers = [
     return HttpResponse.json(null, { status: 204 })
   }),
 
-  http.post(`${API_BASE}/auth/refresh`, async ({ request }) => {
-    const body = (await request.json()) as { refresh_token: string }
-    if (body.refresh_token) {
-      return HttpResponse.json({
-        access_token: 'new-access-token',
-        refresh_token: 'new-refresh-token',
-      })
-    }
-    return HttpResponse.json({ detail: 'Invalid refresh token' }, { status: 401 })
+  http.post(`${API_BASE}/auth/refresh`, () => {
+    return HttpResponse.json({
+      access_token: 'new-access-token',
+      refresh_token: 'new-refresh-token',
+      token_type: 'bearer',
+    })
   }),
 
   // User endpoints

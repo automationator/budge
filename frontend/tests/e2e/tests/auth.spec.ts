@@ -16,8 +16,9 @@ test.describe('Authentication', () => {
       await registerPage.register(testUser.username, testUser.password, testUser.email)
       await registerPage.waitForEnvelopes()
 
-      // Logout by clearing storage
+      // Logout by clearing cookies and storage
       await page.goto('/login')
+      await page.context().clearCookies()
       await page.evaluate(() => localStorage.clear())
       await page.reload()
 
@@ -57,6 +58,7 @@ test.describe('Authentication', () => {
     test('redirects to login when not authenticated', async ({ unauthenticatedPage: page }) => {
       // Navigate to login first, then clear auth state
       await page.goto('/login')
+      await page.context().clearCookies()
       await page.evaluate(() => localStorage.clear())
 
       // Try to access protected route directly
@@ -74,8 +76,9 @@ test.describe('Authentication', () => {
       await registerPage.register(testUser.username, testUser.password, testUser.email)
       await registerPage.waitForEnvelopes()
 
-      // Logout by clearing storage
+      // Logout by clearing cookies and storage
       await page.goto('/login')
+      await page.context().clearCookies()
       await page.evaluate(() => localStorage.clear())
       await page.reload()
 
@@ -116,6 +119,7 @@ test.describe('Authentication', () => {
       }
 
       // Fallback: manually clear session
+      await page.context().clearCookies()
       await page.evaluate(() => localStorage.clear())
       await page.goto('/login')
 

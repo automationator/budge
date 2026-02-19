@@ -36,6 +36,12 @@ EXPOSE 8000
 COPY backend/entrypoint.sh ./entrypoint.sh
 RUN chmod +x entrypoint.sh
 
+# Run as non-root user
+RUN addgroup --system --gid 1001 appuser && adduser --system --uid 1001 --ingroup appuser appuser
+RUN chown -R appuser:appuser /app
+ENV UV_CACHE_DIR=/app/.cache/uv
+USER appuser
+
 ENTRYPOINT ["./entrypoint.sh"]
 
 # Run the application

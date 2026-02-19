@@ -17,6 +17,11 @@ if settings.env == "e2e":
     # Disable asyncpg prepared statement cache to prevent
     # InvalidCachedStatementError when E2E schemas are dropped/recreated
     _connect_args["statement_cache_size"] = 0
+if settings.postgres_ssl:
+    import ssl
+
+    _ssl_context = ssl.create_default_context()
+    _connect_args["ssl"] = _ssl_context
 
 engine = create_async_engine(
     settings.database_url,
