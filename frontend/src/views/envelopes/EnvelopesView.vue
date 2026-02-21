@@ -540,7 +540,7 @@ async function handleAutoAssign() {
     autoAssigning.value = true
     await applyAllocationRules(authStore.currentBudgetId)
     showAutoAssignDialog.value = false
-    await envelopesStore.fetchEnvelopes()
+    await Promise.all([envelopesStore.fetchEnvelopes(), envelopesStore.fetchBudgetSummary()])
   } catch {
     showSnackbar('Failed to assign money', 'error')
   } finally {
@@ -638,8 +638,6 @@ async function handleBalanceSave(item: EnvelopeBudgetItem, newBalance: number) {
       // Transferring FROM this envelope TO unallocated
       await envelopesStore.transferBetweenEnvelopes(item.envelope_id, unallocated.id, Math.abs(diff))
     }
-    // Refresh budget summary after transfer
-    await envelopesStore.fetchBudgetSummary()
   } catch {
     showSnackbar('Failed to update balance', 'error')
   }

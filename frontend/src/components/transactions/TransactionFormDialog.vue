@@ -18,6 +18,7 @@ import PayeeSelect from '@/components/common/PayeeSelect.vue'
 import LocationSelect from '@/components/common/LocationSelect.vue'
 import type { AllocationInput } from '@/api/transactions'
 import type { Transaction } from '@/types'
+import { toLocaleDateString } from '@/utils/date'
 
 const props = defineProps<{
   modelValue: boolean
@@ -58,7 +59,7 @@ const formAccountId = ref<string | null>(null)
 const payeeId = ref<string | null>(null)
 const amount = ref<string>('')
 const isExpense = ref(true)
-const date = ref(new Date().toISOString().split('T')[0] ?? '')
+const date = ref(toLocaleDateString())
 const isCleared = ref(false)
 const memo = ref('')
 const locationId = ref<string | null>(null)
@@ -306,7 +307,7 @@ function resetForm() {
   payeeId.value = null
   amount.value = ''
   isExpense.value = true
-  date.value = new Date().toISOString().split('T')[0] ?? ''
+  date.value = toLocaleDateString()
   isCleared.value = false
   memo.value = ''
   locationId.value = null

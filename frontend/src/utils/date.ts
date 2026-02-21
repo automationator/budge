@@ -1,4 +1,18 @@
 /**
+ * Extract the local date as YYYY-MM-DD string.
+ *
+ * Unlike `toISOString().split('T')[0]`, this uses local time,
+ * so it won't shift to "tomorrow" when it's late evening in
+ * a timezone behind UTC.
+ */
+export function toLocaleDateString(date: Date = new Date()): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
  * Format a date range for display.
  *
  * Converts exclusive end date to inclusive for display.

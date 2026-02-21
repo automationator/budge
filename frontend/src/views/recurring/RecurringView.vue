@@ -11,6 +11,7 @@ import AccountSelect from '@/components/common/AccountSelect.vue'
 import EnvelopeSelect from '@/components/common/EnvelopeSelect.vue'
 import PayeeSelect from '@/components/common/PayeeSelect.vue'
 import type { RecurringTransaction, FrequencyUnit } from '@/types'
+import { toLocaleDateString } from '@/utils/date'
 
 const recurringStore = useRecurringStore()
 const accountsStore = useAccountsStore()
@@ -33,7 +34,7 @@ const formAmount = ref('')
 const formIsExpense = ref(true)
 const formFrequencyValue = ref('1')
 const formFrequencyUnit = ref<FrequencyUnit>('months')
-const formStartDate = ref(new Date().toISOString().split('T')[0] ?? '')
+const formStartDate = ref(toLocaleDateString())
 const formEndDate = ref('')
 const formMemo = ref('')
 const formIsTransfer = ref(false)
@@ -188,7 +189,7 @@ function openCreateDialog() {
   formIsExpense.value = true
   formFrequencyValue.value = '1'
   formFrequencyUnit.value = 'months'
-  formStartDate.value = new Date().toISOString().split('T')[0] ?? ''
+  formStartDate.value = toLocaleDateString()
   formEndDate.value = ''
   formMemo.value = ''
   formIsTransfer.value = false

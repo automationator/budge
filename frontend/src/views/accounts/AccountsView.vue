@@ -7,6 +7,7 @@ import { showSnackbar } from '@/App.vue'
 import AccountForm, { type FormData } from '@/components/accounts/AccountForm.vue'
 import MoneyDisplay from '@/components/common/MoneyDisplay.vue'
 import type { Account, AccountType } from '@/types'
+import { toLocaleDateString } from '@/utils/date'
 
 function getAccountIcon(account: Account): string {
   if (account.icon) return account.icon
@@ -92,7 +93,7 @@ async function handleCreate(data: FormData) {
 
         await transactionsStore.createAdjustment({
           account_id: account.id,
-          date: new Date().toISOString().split('T')[0] ?? '',
+          date: toLocaleDateString(),
           amount: data.starting_balance,
           is_cleared: true,
           memo: 'Starting balance',

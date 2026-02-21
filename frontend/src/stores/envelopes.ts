@@ -24,9 +24,11 @@ import {
   type EnvelopeActivityResponse,
 } from '@/api/envelopes'
 
+import { toLocaleDateString } from '@/utils/date'
+
 // Date range helper functions
 function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0]!
+  return toLocaleDateString(date)
 }
 
 function getFirstDayOfMonth(date: Date): Date {
@@ -344,8 +346,8 @@ export const useEnvelopesStore = defineStore('envelopes', () => {
         to_envelope_id: toId,
         amount,
       })
-      // Refresh envelopes to get updated balances
-      await fetchEnvelopes()
+      // Refresh envelopes and budget summary to get updated balances
+      await Promise.all([fetchEnvelopes(), fetchBudgetSummary()])
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to transfer'
       throw e

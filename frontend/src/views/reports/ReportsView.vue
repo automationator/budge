@@ -44,6 +44,7 @@ import {
   type AccountBalanceHistoryResponse,
   type AllocationRuleEffectivenessItem,
 } from '@/api/reports'
+import { toLocaleDateString } from '@/utils/date'
 
 const authStore = useAuthStore()
 const envelopesStore = useEnvelopesStore()
@@ -119,7 +120,7 @@ const loadingNetWorth = ref(false)
 const datePreset = ref<DateRangePreset>('last_3_months')
 
 function formatDateStr(date: Date): string {
-  return date.toISOString().split('T')[0] ?? ''
+  return toLocaleDateString(date)
 }
 
 function handleDatePreset(preset: DateRangePreset) {
@@ -156,8 +157,8 @@ function handleCustomDateRange(start: string, end: string) {
 // Set default date range (last 3 months)
 const today = new Date()
 const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, 1)
-startDate.value = threeMonthsAgo.toISOString().split('T')[0] ?? ''
-endDate.value = today.toISOString().split('T')[0] ?? ''
+startDate.value = toLocaleDateString(threeMonthsAgo)
+endDate.value = toLocaleDateString(today)
 
 onMounted(async () => {
   await loadReports()

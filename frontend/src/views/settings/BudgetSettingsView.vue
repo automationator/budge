@@ -19,6 +19,7 @@ import {
 import { recalculateBalances, type BalanceCorrection } from '@/api/accounts'
 import { recalculateEnvelopeBalances, type EnvelopeBalanceCorrection } from '@/api/envelopes'
 import type { BudgetRole } from '@/types'
+import { toLocaleDateString } from '@/utils/date'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -327,7 +328,7 @@ async function handleExport() {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
-    const date = new Date().toISOString().split('T')[0]
+    const date = toLocaleDateString()
     const filename = `${budgetName}-export-${date}.json`
 
     // Create and download file
