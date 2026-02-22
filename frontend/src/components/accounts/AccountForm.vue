@@ -148,112 +148,107 @@ function handleSubmit() {
     v-model="formValid"
     @submit.prevent="handleSubmit"
   >
-    <v-text-field
-      v-model="name"
-      label="Account Name"
-      :rules="[rules.required]"
-      autofocus
-    />
-
-    <v-select
-      v-model="accountType"
-      label="Account Type"
-      :items="accountTypes"
-      item-value="value"
-      item-title="title"
-      class="mt-4"
-    >
-      <template #item="{ props: itemProps, item }">
-        <v-list-item v-bind="itemProps">
-          <template #prepend>
-            <v-icon>{{ item.raw.icon }}</v-icon>
-          </template>
-        </v-list-item>
-      </template>
-    </v-select>
-
-    <!-- Icon Picker -->
-    <div class="mt-4">
-      <div class="text-subtitle-2 mb-2">
-        Icon
-      </div>
-      <v-chip-group
-        v-model="selectedIcon"
-        column
-        selected-class="text-primary"
-      >
-        <v-chip
-          v-for="icon in commonIcons"
-          :key="icon.value"
-          :value="icon.value"
-          filter
-          size="small"
-          data-testid="icon-chip"
-        >
-          <span class="mr-1">{{ icon.value }}</span>
-          {{ icon.label }}
-        </v-chip>
-      </v-chip-group>
-
+    <div class="form-fields">
       <v-text-field
-        v-model="customIconInput"
-        label="Custom emoji"
-        hint="Enter any emoji"
-        persistent-hint
-        density="compact"
-        class="mt-2"
-        data-testid="custom-icon-input"
+        v-model="name"
+        label="Account Name"
+        :rules="[rules.required]"
+        autofocus
       />
 
-      <v-btn
-        v-if="selectedIcon || customIconInput"
-        variant="text"
-        size="small"
-        class="mt-1"
-        data-testid="use-default-icon-button"
-        @click="clearIcon"
+      <v-select
+        v-model="accountType"
+        label="Account Type"
+        :items="accountTypes"
+        item-value="value"
+        item-title="title"
       >
-        Use default icon
-      </v-btn>
+        <template #item="{ props: itemProps, item }">
+          <v-list-item v-bind="itemProps">
+            <template #prepend>
+              <v-icon>{{ item.raw.icon }}</v-icon>
+            </template>
+          </v-list-item>
+        </template>
+      </v-select>
+
+      <!-- Icon Picker -->
+      <div>
+        <div class="text-subtitle-2 mb-2">
+          Icon
+        </div>
+        <v-chip-group
+          v-model="selectedIcon"
+          column
+          selected-class="text-primary"
+        >
+          <v-chip
+            v-for="icon in commonIcons"
+            :key="icon.value"
+            :value="icon.value"
+            filter
+            size="small"
+            data-testid="icon-chip"
+          >
+            <span class="mr-1">{{ icon.value }}</span>
+            {{ icon.label }}
+          </v-chip>
+        </v-chip-group>
+
+        <v-text-field
+          v-model="customIconInput"
+          label="Custom emoji"
+          hint="Enter any emoji"
+          persistent-hint
+          density="compact"
+          data-testid="custom-icon-input"
+        />
+
+        <v-btn
+          v-if="selectedIcon || customIconInput"
+          variant="text"
+          size="small"
+          data-testid="use-default-icon-button"
+          @click="clearIcon"
+        >
+          Use default icon
+        </v-btn>
+      </div>
+
+      <v-textarea
+        v-model="description"
+        label="Description (optional)"
+        rows="2"
+      />
+
+      <v-text-field
+        v-if="!isEditing"
+        v-model="startingBalance"
+        label="Starting Balance (optional)"
+        type="number"
+        step="0.01"
+        prefix="$"
+        hint="Set an initial balance for this account"
+        persistent-hint
+      />
+
+      <v-switch
+        v-model="includeInBudget"
+        label="Include in budget"
+        color="primary"
+        hint="Include this account's balance in your budget totals"
+        persistent-hint
+      />
+
+      <v-switch
+        v-if="isEditing"
+        v-model="isActive"
+        label="Active"
+        color="primary"
+        hint="Inactive accounts are hidden from the main view"
+        persistent-hint
+      />
     </div>
-
-    <v-textarea
-      v-model="description"
-      label="Description (optional)"
-      rows="2"
-      class="mt-4"
-    />
-
-    <v-text-field
-      v-if="!isEditing"
-      v-model="startingBalance"
-      label="Starting Balance (optional)"
-      type="number"
-      step="0.01"
-      prefix="$"
-      hint="Set an initial balance for this account"
-      persistent-hint
-      class="mt-4"
-    />
-
-    <v-switch
-      v-model="includeInBudget"
-      label="Include in budget"
-      color="primary"
-      hint="Include this account's balance in your budget totals"
-      persistent-hint
-      class="mt-4"
-    />
-
-    <v-switch
-      v-if="isEditing"
-      v-model="isActive"
-      label="Active"
-      color="primary"
-      hint="Inactive accounts are hidden from the main view"
-      persistent-hint
-      class="mt-2"
-    />
 
     <div class="d-flex justify-end gap-2 mt-6">
       <v-btn
@@ -264,6 +259,7 @@ function handleSubmit() {
       </v-btn>
       <v-btn
         color="primary"
+        class="create-btn"
         :loading="loading"
         :disabled="!formValid"
         @click="handleSubmit"

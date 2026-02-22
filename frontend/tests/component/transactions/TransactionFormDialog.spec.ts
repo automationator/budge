@@ -265,7 +265,7 @@ describe('TransactionFormDialog', () => {
       await selectAccount(wrapper, 'budget-acct')
 
       // Envelope section should be visible
-      expect(document.body.textContent).toContain('Split across envelopes')
+      expect(document.body.textContent).toContain('Split')
     })
 
     it('envelope selector does not appear for non-budget accounts', async () => {
@@ -283,7 +283,7 @@ describe('TransactionFormDialog', () => {
       await selectAccount(wrapper, 'tracking-acct')
 
       // Envelope section should NOT be visible
-      expect(document.body.textContent).not.toContain('Split across envelopes')
+      expect(document.body.textContent).not.toContain('Split')
     })
   })
 
@@ -306,7 +306,7 @@ describe('TransactionFormDialog', () => {
       await switchToIncome()
 
       // Income allocation mode radio group should be visible
-      const radioGroup = document.querySelector('.v-dialog .v-radio-group')
+      const radioGroup = document.querySelector('.v-dialog [data-testid="income-allocation-toggle"]')
       expect(radioGroup).toBeTruthy()
       expect(radioGroup!.textContent).toContain('Envelope')
       expect(radioGroup!.textContent).toContain('None')
@@ -327,7 +327,7 @@ describe('TransactionFormDialog', () => {
       await selectAccount(wrapper, 'budget-acct')
 
       // Radio group should NOT be visible for expenses
-      const radioGroup = document.querySelector('.v-dialog .v-radio-group')
+      const radioGroup = document.querySelector('.v-dialog [data-testid="income-allocation-toggle"]')
       expect(radioGroup).toBeNull()
     })
   })
@@ -461,7 +461,7 @@ describe('TransactionFormDialog', () => {
       await selectAccount(wrapper, 'cc-acct')
 
       // Envelope section should be visible (CC accounts are budget accounts)
-      expect(document.body.textContent).toContain('Split across envelopes')
+      expect(document.body.textContent).toContain('Split')
     })
 
     it('does not include CC envelopes in the envelope dropdown', async () => {

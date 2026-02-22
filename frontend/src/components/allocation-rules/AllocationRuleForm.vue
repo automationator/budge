@@ -316,102 +316,96 @@ defineExpose({
 
 <template>
   <v-form @submit.prevent="handleSubmit">
-    <!-- Name -->
-    <v-text-field
-      v-model="formName"
-      label="Name (optional)"
-      hint="Give this rule a descriptive name"
-      persistent-hint
-      class="mb-4"
-    />
+    <div class="form-fields">
+      <!-- Name -->
+      <v-text-field
+        v-model="formName"
+        label="Name (optional)"
+        hint="Give this rule a descriptive name"
+        persistent-hint
+      />
 
-    <!-- Envelope -->
-    <EnvelopeSelect
-      v-if="showEnvelopeSelect && !envelopeId"
-      v-model="formEnvelopeId"
-      label="Envelope"
-      :include-unallocated="false"
-      class="mb-4"
-    />
+      <!-- Envelope -->
+      <EnvelopeSelect
+        v-if="showEnvelopeSelect && !envelopeId"
+        v-model="formEnvelopeId"
+        label="Envelope"
+        :include-unallocated="false"
+      />
 
-    <!-- Rule Type -->
-    <v-select
-      v-model="formRuleType"
-      label="Rule Type"
-      :items="filteredRuleTypeOptions"
-      :hint="getRuleTypeHint(formRuleType)"
-      persistent-hint
-      class="mb-4"
-    />
+      <!-- Rule Type -->
+      <v-select
+        v-model="formRuleType"
+        label="Rule Type"
+        :items="filteredRuleTypeOptions"
+        :hint="getRuleTypeHint(formRuleType)"
+        persistent-hint
+      />
 
-    <!-- Amount (hidden for fill_to_target) -->
-    <v-text-field
-      v-if="formRuleType !== 'fill_to_target'"
-      v-model="formAmount"
-      :label="getAmountLabel()"
-      type="number"
-      step="0.01"
-      min="0"
-      :hint="getAmountHint()"
-      persistent-hint
-      class="mb-4"
-    />
+      <!-- Amount (hidden for fill_to_target) -->
+      <v-text-field
+        v-if="formRuleType !== 'fill_to_target'"
+        v-model="formAmount"
+        :label="getAmountLabel()"
+        type="number"
+        step="0.01"
+        min="0"
+        :hint="getAmountHint()"
+        persistent-hint
+      />
 
-    <!-- Period Cap fields (only for period_cap rules) -->
-    <v-row v-if="formRuleType === 'period_cap'">
-      <v-col cols="6">
-        <v-text-field
-          v-model="formCapPeriodValue"
-          label="Every"
-          type="number"
-          min="1"
-          class="mb-4"
-        />
-      </v-col>
-      <v-col cols="6">
-        <v-select
-          v-model="formCapPeriodUnit"
-          label="Period"
-          :items="[
-            { title: 'Week(s)', value: 'week' },
-            { title: 'Month(s)', value: 'month' },
-            { title: 'Year(s)', value: 'year' },
-          ]"
-          class="mb-4"
-        />
-      </v-col>
-    </v-row>
+      <!-- Period Cap fields (only for period_cap rules) -->
+      <v-row v-if="formRuleType === 'period_cap'">
+        <v-col cols="6">
+          <v-text-field
+            v-model="formCapPeriodValue"
+            label="Every"
+            type="number"
+            min="1"
+          />
+        </v-col>
+        <v-col cols="6">
+          <v-select
+            v-model="formCapPeriodUnit"
+            label="Period"
+            :items="[
+              { title: 'Week(s)', value: 'week' },
+              { title: 'Month(s)', value: 'month' },
+              { title: 'Year(s)', value: 'year' },
+            ]"
+          />
+        </v-col>
+      </v-row>
 
-    <!-- Priority (hidden for period_cap) -->
-    <v-text-field
-      v-if="formRuleType !== 'period_cap'"
-      v-model="formPriority"
-      label="Priority"
-      type="number"
-      min="0"
-      hint="Lower numbers execute first"
-      persistent-hint
-      class="mb-4"
-    />
+      <!-- Priority (hidden for period_cap) -->
+      <v-text-field
+        v-if="formRuleType !== 'period_cap'"
+        v-model="formPriority"
+        label="Priority"
+        type="number"
+        min="0"
+        hint="Lower numbers execute first"
+        persistent-hint
+      />
 
-    <!-- Respect Target (not for fill_to_target or period_cap) -->
-    <v-switch
-      v-if="formRuleType !== 'fill_to_target' && formRuleType !== 'period_cap'"
-      v-model="formRespectTarget"
-      label="Stop at target balance"
-      hint="Only allocate until envelope reaches its target balance"
-      persistent-hint
-      class="mb-4"
-    />
+      <!-- Respect Target (not for fill_to_target or period_cap) -->
+      <v-switch
+        v-if="formRuleType !== 'fill_to_target' && formRuleType !== 'period_cap'"
+        v-model="formRespectTarget"
+        label="Stop at target balance"
+        hint="Only allocate until envelope reaches its target balance"
+        persistent-hint
+      />
 
-    <!-- Active -->
-    <v-switch
-      v-model="formIsActive"
-      label="Active"
-      hint="Inactive rules are skipped during allocation"
-      persistent-hint
-      hide-details
-    />
+      <!-- Active -->
+      <v-switch
+        v-model="formIsActive"
+        label="Active"
+        hint="Inactive rules are skipped during allocation"
+        persistent-hint
+        hide-details
+      />
+    </div>
 
     <!-- Actions -->
     <div
@@ -426,6 +420,7 @@ defineExpose({
       </v-btn>
       <v-btn
         color="primary"
+        class="create-btn"
         type="submit"
         :loading="loading"
         :disabled="!isFormValid"

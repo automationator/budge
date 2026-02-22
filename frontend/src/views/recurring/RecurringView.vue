@@ -541,152 +541,144 @@ watch([formAccountId, formDestinationAccountId, formIsTransfer], () => {
       v-model="showFormDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>
           {{ editingId ? 'Edit Recurring Transaction' : 'New Recurring Transaction' }}
         </v-card-title>
         <v-card-text>
-          <!-- Transaction Type -->
-          <v-btn-toggle
-            v-model="formIsTransfer"
-            mandatory
-            density="compact"
-            class="mb-4"
-          >
-            <v-btn :value="false">
-              Transaction
-            </v-btn>
-            <v-btn :value="true">
-              Transfer
-            </v-btn>
-          </v-btn-toggle>
-
-          <!-- Account -->
-          <AccountSelect
-            v-model="formAccountId"
-            :label="formIsTransfer ? 'From Account' : 'Account'"
-            class="mb-4"
-          />
-
-          <!-- For transfers: destination account -->
-          <AccountSelect
-            v-if="formIsTransfer"
-            v-model="formDestinationAccountId"
-            label="To Account"
-            :exclude-ids="formAccountId ? [formAccountId] : []"
-            class="mb-4"
-          />
-
-          <!-- Envelope (for budget -> tracking transfers) -->
-          <EnvelopeSelect
-            v-if="isBudgetToTrackingTransfer"
-            v-model="formEnvelopeId"
-            label="Envelope"
-            :rules="required"
-            :include-unallocated="false"
-            hint="Which envelope is this money coming from?"
-            persistent-hint
-            class="mb-4"
-          />
-
-          <!-- For regular: payee -->
-          <PayeeSelect
-            v-if="!formIsTransfer"
-            v-model="formPayeeId"
-            class="mb-4"
-          />
-
-          <!-- Amount -->
-          <div
-            v-if="!formIsTransfer"
-            class="d-flex gap-2 mb-4"
-          >
+          <div class="form-fields">
+            <!-- Transaction Type -->
             <v-btn-toggle
-              v-model="formIsExpense"
+              v-model="formIsTransfer"
               mandatory
               density="compact"
             >
-              <v-btn :value="true">
-                Expense
-              </v-btn>
               <v-btn :value="false">
-                Income
+                Transaction
+              </v-btn>
+              <v-btn :value="true">
+                Transfer
               </v-btn>
             </v-btn-toggle>
+
+            <!-- Account -->
+            <AccountSelect
+              v-model="formAccountId"
+              :label="formIsTransfer ? 'From Account' : 'Account'"
+            />
+
+            <!-- For transfers: destination account -->
+            <AccountSelect
+              v-if="formIsTransfer"
+              v-model="formDestinationAccountId"
+              label="To Account"
+              :exclude-ids="formAccountId ? [formAccountId] : []"
+            />
+
+            <!-- Envelope (for budget -> tracking transfers) -->
+            <EnvelopeSelect
+              v-if="isBudgetToTrackingTransfer"
+              v-model="formEnvelopeId"
+              label="Envelope"
+              :rules="required"
+              :include-unallocated="false"
+              hint="Which envelope is this money coming from?"
+              persistent-hint
+            />
+
+            <!-- For regular: payee -->
+            <PayeeSelect
+              v-if="!formIsTransfer"
+              v-model="formPayeeId"
+            />
+
+            <!-- Amount -->
+            <div
+              v-if="!formIsTransfer"
+              class="d-flex gap-2"
+            >
+              <v-btn-toggle
+                v-model="formIsExpense"
+                mandatory
+                density="compact"
+              >
+                <v-btn :value="true">
+                  Expense
+                </v-btn>
+                <v-btn :value="false">
+                  Income
+                </v-btn>
+              </v-btn-toggle>
+            </div>
+
+            <MoneyInput
+              v-model="formAmount"
+            />
+
+            <!-- Frequency -->
+            <v-row>
+              <v-col cols="4">
+                <v-text-field
+                  v-model="formFrequencyValue"
+                  label="Every"
+                  type="number"
+                  min="1"
+                  hide-details
+                />
+              </v-col>
+              <v-col cols="8">
+                <v-select
+                  v-model="formFrequencyUnit"
+                  label="Period"
+                  :items="frequencyUnitOptions"
+                  hide-details
+                />
+              </v-col>
+            </v-row>
+
+            <!-- Dates -->
+            <v-text-field
+              v-model="formStartDate"
+              label="Start Date"
+              type="date"
+            />
+
+            <v-text-field
+              v-model="formEndDate"
+              label="End Date (optional)"
+              type="date"
+              clearable
+            />
+
+            <!-- Envelope (for budget account expenses - required) -->
+            <EnvelopeSelect
+              v-if="isInBudgetAccount && !formIsTransfer && formIsExpense"
+              v-model="formEnvelopeId"
+              label="Envelope"
+              :clearable="false"
+              :rules="required"
+              :include-unallocated="false"
+              hint="Required for expenses"
+              persistent-hint
+            />
+
+            <!-- Envelope (for budget account income - optional) -->
+            <EnvelopeSelect
+              v-if="isInBudgetAccount && !formIsTransfer && !formIsExpense"
+              v-model="formEnvelopeId"
+              label="Envelope"
+              clearable
+              include-unallocated
+              hint="Leave empty to use Unallocated"
+              persistent-hint
+            />
+
+            <!-- Memo -->
+            <v-text-field
+              v-model="formMemo"
+              label="Memo (optional)"
+            />
           </div>
-
-          <MoneyInput
-            v-model="formAmount"
-            class="mb-4"
-          />
-
-          <!-- Frequency -->
-          <v-row class="mb-4">
-            <v-col cols="4">
-              <v-text-field
-                v-model="formFrequencyValue"
-                label="Every"
-                type="number"
-                min="1"
-                hide-details
-              />
-            </v-col>
-            <v-col cols="8">
-              <v-select
-                v-model="formFrequencyUnit"
-                label="Period"
-                :items="frequencyUnitOptions"
-                hide-details
-              />
-            </v-col>
-          </v-row>
-
-          <!-- Dates -->
-          <v-text-field
-            v-model="formStartDate"
-            label="Start Date"
-            type="date"
-            class="mb-4"
-          />
-
-          <v-text-field
-            v-model="formEndDate"
-            label="End Date (optional)"
-            type="date"
-            clearable
-            class="mb-4"
-          />
-
-          <!-- Envelope (for budget account expenses - required) -->
-          <EnvelopeSelect
-            v-if="isInBudgetAccount && !formIsTransfer && formIsExpense"
-            v-model="formEnvelopeId"
-            label="Envelope"
-            :clearable="false"
-            :rules="required"
-            :include-unallocated="false"
-            hint="Required for expenses"
-            persistent-hint
-            class="mb-4"
-          />
-
-          <!-- Envelope (for budget account income - optional) -->
-          <EnvelopeSelect
-            v-if="isInBudgetAccount && !formIsTransfer && !formIsExpense"
-            v-model="formEnvelopeId"
-            label="Envelope"
-            clearable
-            include-unallocated
-            hint="Leave empty to use Unallocated"
-            persistent-hint
-            class="mb-4"
-          />
-
-          <!-- Memo -->
-          <v-text-field
-            v-model="formMemo"
-            label="Memo (optional)"
-          />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -698,6 +690,7 @@ watch([formAccountId, formDestinationAccountId, formIsTransfer], () => {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="formLoading"
             :disabled="!formAccountId || !formAmount || (formIsTransfer && !formDestinationAccountId) || (!formIsTransfer && !formPayeeId) || (isEnvelopeRequired && !formEnvelopeId) || (isBudgetToTrackingTransfer && !formEnvelopeId)"
             @click="handleSubmit"
@@ -713,7 +706,7 @@ watch([formAccountId, formDestinationAccountId, formIsTransfer], () => {
       v-model="showDeleteDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Delete Recurring Transaction</v-card-title>
         <v-card-text>
           <p class="mb-4">

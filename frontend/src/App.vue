@@ -190,6 +190,29 @@ html, body {
   }
 }
 
+/* Modern form field styling */
+.v-field--variant-solo-filled {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px !important;
+  background: rgba(var(--v-theme-on-surface), 0.04) !important;
+}
+
+/* Uniform form field spacing */
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Gradient primary action button */
+.create-btn:not(.v-btn--disabled) {
+  background: linear-gradient(135deg, #7c83ff, #6c5ce7) !important;
+  box-shadow: 0 2px 12px rgba(124, 131, 255, 0.2) !important;
+}
+.create-btn:not(.v-btn--disabled):hover {
+  box-shadow: 0 4px 16px rgba(124, 131, 255, 0.3) !important;
+}
+
 /* Snackbar close button with countdown ring */
 .snackbar-close-btn {
   cursor: pointer;

@@ -379,25 +379,26 @@ async function savePassword() {
       v-model="showPasswordDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Change Password</v-card-title>
         <v-card-text>
           <v-form @submit.prevent="savePassword">
-            <v-text-field
-              v-model="newPassword"
-              label="New Password"
-              type="password"
-              :rules="[(v) => v.length >= 8 || 'Password must be at least 8 characters']"
-              required
-            />
-            <v-text-field
-              v-model="confirmPassword"
-              label="Confirm Password"
-              type="password"
-              :rules="[(v) => v === newPassword || 'Passwords must match']"
-              required
-              class="mt-4"
-            />
+            <div class="form-fields">
+              <v-text-field
+                v-model="newPassword"
+                label="New Password"
+                type="password"
+                :rules="[(v) => v.length >= 8 || 'Password must be at least 8 characters']"
+                required
+              />
+              <v-text-field
+                v-model="confirmPassword"
+                label="Confirm Password"
+                type="password"
+                :rules="[(v) => v === newPassword || 'Passwords must match']"
+                required
+              />
+            </div>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -410,6 +411,7 @@ async function savePassword() {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="savingPassword"
             @click="savePassword"
           >

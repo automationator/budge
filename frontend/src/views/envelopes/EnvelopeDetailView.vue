@@ -677,50 +677,48 @@ async function toggleRuleActive(rule: AllocationRule) {
       v-model="showEditDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Edit Envelope</v-card-title>
         <v-card-text>
-          <v-text-field
-            v-model="editName"
-            label="Name"
-            class="mb-4"
-          />
+          <div class="form-fields">
+            <v-text-field
+              v-model="editName"
+              label="Name"
+            />
 
-          <v-text-field
-            v-model="editIcon"
-            label="Icon (emoji)"
-            placeholder="🛒"
-            hint="Optional - tap to open emoji keyboard"
-            persistent-hint
-            class="mb-4"
-            style="max-width: 120px"
-          />
+            <v-text-field
+              v-model="editIcon"
+              label="Icon (emoji)"
+              placeholder="🛒"
+              hint="Optional - tap to open emoji keyboard"
+              persistent-hint
+              style="max-width: 120px"
+            />
 
-          <v-select
-            v-model="editGroupId"
-            label="Group"
-            :items="groupOptions"
-            clearable
-            class="mb-4"
-          />
+            <v-select
+              v-model="editGroupId"
+              label="Group"
+              :items="groupOptions"
+              clearable
+            />
 
-          <v-text-field
-            v-model="editTargetBalance"
-            label="Target Balance (optional)"
-            type="number"
-            step="0.01"
-            min="0"
-            prefix="$"
-            hint="Set a savings goal for this envelope"
-            persistent-hint
-            class="mb-4"
-          />
+            <v-text-field
+              v-model="editTargetBalance"
+              label="Target Balance (optional)"
+              type="number"
+              step="0.01"
+              min="0"
+              prefix="$"
+              hint="Set a savings goal for this envelope"
+              persistent-hint
+            />
 
-          <v-textarea
-            v-model="editDescription"
-            label="Description (optional)"
-            rows="2"
-          />
+            <v-textarea
+              v-model="editDescription"
+              label="Description (optional)"
+              rows="2"
+            />
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -732,6 +730,7 @@ async function toggleRuleActive(rule: AllocationRule) {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="saving"
             :disabled="!editName.trim()"
             @click="handleSave"
@@ -747,7 +746,7 @@ async function toggleRuleActive(rule: AllocationRule) {
       v-model="showTransferDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Transfer Money</v-card-title>
         <v-card-text>
           <!-- Direction Toggle -->
@@ -771,17 +770,18 @@ async function toggleRuleActive(rule: AllocationRule) {
             </v-btn>
           </v-btn-toggle>
 
-          <v-select
-            v-model="transferOtherId"
-            :label="transferDirection === 'to' ? 'From Envelope' : 'To Envelope'"
-            :items="transferableEnvelopes"
-            class="mb-4"
-          />
+          <div class="form-fields">
+            <v-select
+              v-model="transferOtherId"
+              :label="transferDirection === 'to' ? 'From Envelope' : 'To Envelope'"
+              :items="transferableEnvelopes"
+            />
 
-          <MoneyInput
-            v-model="transferAmount"
-            label="Amount"
-          />
+            <MoneyInput
+              v-model="transferAmount"
+              label="Amount"
+            />
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -793,6 +793,7 @@ async function toggleRuleActive(rule: AllocationRule) {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="transferring"
             :disabled="!transferOtherId || !transferAmount || parseFloat(transferAmount) <= 0"
             @click="handleTransfer"
@@ -808,7 +809,7 @@ async function toggleRuleActive(rule: AllocationRule) {
       v-model="showDeleteDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Delete Envelope</v-card-title>
         <v-card-text>
           Are you sure you want to delete <strong>{{ envelope?.name }}</strong>?
@@ -848,7 +849,7 @@ async function toggleRuleActive(rule: AllocationRule) {
       v-model="showRuleDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>
           {{ editingRule ? 'Edit Allocation Rule' : 'New Allocation Rule' }}
         </v-card-title>
@@ -872,7 +873,7 @@ async function toggleRuleActive(rule: AllocationRule) {
       v-model="showDeleteRuleDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Delete Allocation Rule</v-card-title>
         <v-card-text>
           Are you sure you want to delete this allocation rule? This action cannot be undone.

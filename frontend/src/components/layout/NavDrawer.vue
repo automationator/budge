@@ -327,7 +327,7 @@ async function handleCreateAccount(data: FormData) {
     v-model="showCreateDialog"
     max-width="500"
   >
-    <v-card>
+    <v-card rounded="xl">
       <v-card-title>Create Account</v-card-title>
       <v-card-text>
         <AccountForm

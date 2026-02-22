@@ -777,32 +777,33 @@ function formatCurrency(cents: number): string {
       v-model="showInviteDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Add Budget Member</v-card-title>
         <v-card-text>
           <v-form @submit.prevent="inviteMember">
-            <v-text-field
-              v-model="inviteUsername"
-              label="Username"
-              required
-              hint="Enter the username of an existing user"
-              persistent-hint
-            />
+            <div class="form-fields">
+              <v-text-field
+                v-model="inviteUsername"
+                label="Username"
+                required
+                hint="Enter the username of an existing user"
+                persistent-hint
+              />
 
-            <v-select
-              v-model="inviteRole"
-              label="Role"
-              :items="roleOptions"
-              item-title="title"
-              item-value="value"
-              class="mt-4"
-            >
-              <template #item="{ item, props }">
-                <v-list-item v-bind="props">
-                  <v-list-item-subtitle>{{ item.raw.description }}</v-list-item-subtitle>
-                </v-list-item>
-              </template>
-            </v-select>
+              <v-select
+                v-model="inviteRole"
+                label="Role"
+                :items="roleOptions"
+                item-title="title"
+                item-value="value"
+              >
+                <template #item="{ item, props }">
+                  <v-list-item v-bind="props">
+                    <v-list-item-subtitle>{{ item.raw.description }}</v-list-item-subtitle>
+                  </v-list-item>
+                </template>
+              </v-select>
+            </div>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -815,6 +816,7 @@ function formatCurrency(cents: number): string {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="inviting"
             :disabled="!inviteUsername"
             @click="inviteMember"
@@ -830,7 +832,7 @@ function formatCurrency(cents: number): string {
       v-model="showRoleDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Change Role</v-card-title>
         <v-card-text>
           <p class="mb-4">
@@ -860,6 +862,7 @@ function formatCurrency(cents: number): string {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="changingRole"
             @click="changeRole"
           >
@@ -874,7 +877,7 @@ function formatCurrency(cents: number): string {
       v-model="showRemoveDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Remove Member</v-card-title>
         <v-card-text>
           Are you sure you want to remove <strong>{{ memberToRemove?.username }}</strong> from the
@@ -904,7 +907,7 @@ function formatCurrency(cents: number): string {
       v-model="showDeleteDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title class="text-error">
           Delete Budget
         </v-card-title>
@@ -963,7 +966,7 @@ function formatCurrency(cents: number): string {
       v-model="showImportDialog"
       max-width="600"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Import Budget Data</v-card-title>
         <v-card-text>
           <!-- File Selection -->
@@ -1070,6 +1073,7 @@ function formatCurrency(cents: number): string {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="importing"
             :disabled="!importData || !importPassword"
             data-testid="import-confirm-button"
@@ -1086,7 +1090,7 @@ function formatCurrency(cents: number): string {
       v-model="showImportResultDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Import Complete</v-card-title>
         <v-card-text v-if="importResult">
           <v-list density="compact">
@@ -1197,6 +1201,7 @@ function formatCurrency(cents: number): string {
           <v-spacer />
           <v-btn
             color="primary"
+            class="create-btn"
             data-testid="import-result-close-button"
             @click="closeImportResultDialog"
           >
@@ -1211,7 +1216,7 @@ function formatCurrency(cents: number): string {
       v-model="showRepairResultDialog"
       max-width="600"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Balance Corrections Applied</v-card-title>
         <v-card-text>
           <div
@@ -1303,6 +1308,7 @@ function formatCurrency(cents: number): string {
           <v-spacer />
           <v-btn
             color="primary"
+            class="create-btn"
             data-testid="repair-result-close-button"
             @click="closeRepairResultDialog"
           >

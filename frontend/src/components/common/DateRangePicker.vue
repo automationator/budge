@@ -104,7 +104,7 @@ watch(
     v-model="showCustomDialog"
     max-width="400"
   >
-    <v-card>
+    <v-card rounded="xl">
       <v-card-title>Custom Date Range</v-card-title>
       <v-card-text>
         <v-row>
@@ -137,6 +137,7 @@ watch(
         <v-btn
           color="primary"
           variant="flat"
+          class="create-btn"
           @click="applyCustomRange"
         >
           Apply

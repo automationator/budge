@@ -590,7 +590,7 @@ async function runPreview() {
       v-model="showFormDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>
           {{ editingRule ? 'Edit Allocation Rule' : 'New Allocation Rule' }}
         </v-card-title>
@@ -613,7 +613,7 @@ async function runPreview() {
       v-model="showDeleteDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Delete Allocation Rule</v-card-title>
         <v-card-text>
           Are you sure you want to delete this allocation rule? This action cannot be undone.

@@ -45,11 +45,15 @@ const vuetify = createVuetify({
       variant: 'flat',
     },
     VTextField: {
-      variant: 'outlined',
+      variant: 'solo-filled',
       density: 'comfortable',
     },
     VSelect: {
-      variant: 'outlined',
+      variant: 'solo-filled',
+      density: 'comfortable',
+    },
+    VAutocomplete: {
+      variant: 'solo-filled',
       density: 'comfortable',
     },
   },

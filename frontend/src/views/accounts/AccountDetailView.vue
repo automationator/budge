@@ -577,7 +577,7 @@ async function handleTransactionChange() {
       v-model="showEditDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Edit Account</v-card-title>
         <v-card-text>
           <AccountForm
@@ -595,7 +595,7 @@ async function handleTransactionChange() {
       v-model="showDeleteDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Delete Account?</v-card-title>
         <v-card-text>
           Are you sure you want to delete "{{ account?.name }}"?
@@ -625,7 +625,7 @@ async function handleTransactionChange() {
       v-model="showReconcileDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Reconcile Account</v-card-title>
 
         <!-- Step 1: Confirmation -->
@@ -657,6 +657,7 @@ async function handleTransactionChange() {
             </v-btn>
             <v-btn
               color="primary"
+              class="create-btn"
               :loading="saving"
               @click="handleReconcileConfirmBalance"
             >
@@ -696,6 +697,7 @@ async function handleTransactionChange() {
             </v-btn>
             <v-btn
               color="primary"
+              class="create-btn"
               :loading="saving"
               @click="handleReconcile"
             >

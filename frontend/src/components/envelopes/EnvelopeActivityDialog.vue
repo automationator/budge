@@ -99,7 +99,7 @@ const negativeTotal = computed(() => {
     scrollable
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <v-card>
+    <v-card rounded="xl">
       <v-card-title class="d-flex align-center">
         <span>{{ envelopeName }} Activity</span>
         <v-spacer />

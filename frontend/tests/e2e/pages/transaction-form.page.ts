@@ -52,7 +52,7 @@ export class TransactionFormPage extends BasePage {
   readonly deleteConfirmButton: Locator
   readonly deleteCancelButton: Locator
 
-  // Income allocation mode (for new income in budget accounts)
+  // Income allocation mode toggle (for new income in budget accounts)
   readonly incomeAllocationModeGroup: Locator
   readonly autoDistributeRadio: Locator
   readonly envelopeModeRadio: Locator
@@ -101,18 +101,18 @@ export class TransactionFormPage extends BasePage {
     this.memoInput = this.dialog.locator('.v-text-field').filter({ hasText: 'Memo (optional)' }).locator('textarea, input').first()
     this.locationAutocomplete = this.dialog.locator('.v-autocomplete').filter({ hasText: 'Location (optional)' })
 
-    // Envelope selection elements - use more specific locator to avoid matching other selects
-    this.envelopeSection = this.dialog.locator('.text-subtitle-1').filter({ hasText: 'Envelope' }).locator('..')
+    // Envelope selection elements
+    this.envelopeSection = this.dialog.locator('.envelope-section-container')
     this.envelopeSelect = this.dialog.locator('.v-autocomplete:has(.v-label:text("Envelope"):not(:text("Link to Envelope")))').first()
-    this.splitEnvelopesButton = this.dialog.getByRole('button', { name: 'Split across envelopes' })
-    this.useSingleEnvelopeButton = this.dialog.getByRole('button', { name: 'Use single envelope' })
+    this.splitEnvelopesButton = this.dialog.getByRole('button', { name: 'Split' })
+    this.useSingleEnvelopeButton = this.dialog.getByRole('button', { name: 'Use Single' })
     this.addAllocationButton = this.dialog.getByRole('button', { name: 'Add Allocation' })
-    this.allocationRows = this.dialog.locator('.d-flex.gap-2.mb-2.align-center')
+    this.allocationRows = this.dialog.locator('[data-testid="allocation-row"]')
 
     // Action buttons
     this.createButton = this.dialog.getByRole('button', { name: 'Create' })
     this.saveButton = this.dialog.getByRole('button', { name: 'Save', exact: true })
-    this.saveAndAddAnotherButton = this.dialog.getByRole('button', { name: 'Save & Add Another' })
+    this.saveAndAddAnotherButton = this.dialog.getByRole('button', { name: 'Save & New' })
     this.cancelButton = this.dialog.getByRole('button', { name: 'Cancel' })
     this.deleteButton = this.dialog.getByRole('button', { name: 'Delete' })
 
@@ -121,11 +121,11 @@ export class TransactionFormPage extends BasePage {
     this.deleteConfirmButton = this.deleteDialog.getByRole('button', { name: 'Delete' })
     this.deleteCancelButton = this.deleteDialog.getByRole('button', { name: 'Cancel' })
 
-    // Income allocation mode radio group (for new income in budget accounts)
-    this.incomeAllocationModeGroup = this.dialog.locator('.v-radio-group')
-    this.autoDistributeRadio = this.dialog.getByRole('radio', { name: 'Auto-distribute' })
-    this.envelopeModeRadio = this.dialog.getByRole('radio', { name: 'Envelope' })
-    this.noneModeRadio = this.dialog.getByRole('radio', { name: 'None' })
+    // Income allocation mode toggle (for new income in budget accounts)
+    this.incomeAllocationModeGroup = this.dialog.locator('[data-testid="income-allocation-toggle"]')
+    this.autoDistributeRadio = this.incomeAllocationModeGroup.getByRole('button', { name: 'Auto-distribute' })
+    this.envelopeModeRadio = this.incomeAllocationModeGroup.getByRole('button', { name: 'Envelope' })
+    this.noneModeRadio = this.incomeAllocationModeGroup.getByRole('button', { name: 'None' })
 
     // Allocation preview dialog
     this.previewDialog = page.locator('.v-dialog').filter({ hasText: 'Allocation Preview' })
@@ -662,7 +662,7 @@ export class TransactionFormPage extends BasePage {
    * Check if the Envelope label is visible (for budget accounts including CC).
    */
   async expectEnvelopeLabelVisible() {
-    const envelopeLabel = this.dialog.locator('.text-subtitle-1').filter({ hasText: 'Envelope' })
+    const envelopeLabel = this.dialog.locator('.envelope-section-title')
     await expect(envelopeLabel).toBeVisible({ timeout: 10000 })
   }
 
@@ -695,9 +695,9 @@ export class TransactionFormPage extends BasePage {
    * Get the currently selected income allocation mode.
    */
   async getSelectedIncomeAllocationMode(): Promise<'auto-distribute' | 'envelope' | 'none' | null> {
-    if (await this.autoDistributeRadio.isChecked()) return 'auto-distribute'
-    if (await this.envelopeModeRadio.isChecked()) return 'envelope'
-    if (await this.noneModeRadio.isChecked()) return 'none'
+    if (await this.autoDistributeRadio.getAttribute('aria-pressed') === 'true') return 'auto-distribute'
+    if (await this.envelopeModeRadio.getAttribute('aria-pressed') === 'true') return 'envelope'
+    if (await this.noneModeRadio.getAttribute('aria-pressed') === 'true') return 'none'
     return null
   }
 

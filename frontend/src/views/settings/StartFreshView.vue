@@ -420,7 +420,7 @@ async function confirmDelete() {
       v-model="showConfirmDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title class="text-error">
           Confirm Deletion
         </v-card-title>

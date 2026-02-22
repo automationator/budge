@@ -44,7 +44,6 @@ const authStore = useAuthStore()
 const { mobile } = useDisplay()
 
 const fieldDensity = computed(() => mobile.value ? 'compact' as const : 'default' as const)
-const fieldSpacing = computed(() => mobile.value ? 'mt-1' : 'mt-2')
 const fieldHideDetails = computed(() => mobile.value ? 'auto' as const : false as const)
 
 const isEditing = computed(() => !!props.transactionId)
@@ -628,9 +627,12 @@ async function handleDelete() {
   <v-dialog
     v-model="dialogOpen"
     :fullscreen="mobile"
-    :max-width="mobile ? undefined : 600"
+    :max-width="mobile ? undefined : 480"
   >
-    <v-card :class="{ 'd-flex flex-column': mobile }">
+    <v-card
+      :class="{ 'd-flex flex-column': mobile }"
+      rounded="xl"
+    >
       <v-card-title class="d-flex align-center">
         <span>{{ dialogTitle }}</span>
         <v-spacer />
@@ -647,6 +649,7 @@ async function handleDelete() {
           icon="mdi-close"
           variant="text"
           size="small"
+          class="close-btn"
           @click="closeDialog"
         />
       </v-card-title>
@@ -672,303 +675,326 @@ async function handleDelete() {
         >
           <!-- Standard Transaction Form -->
           <template v-if="transactionType === 'standard' || transactionType === 'adjustment'">
-            <!-- Adjustment notice -->
-            <v-alert
-              v-if="isAdjustment"
-              type="info"
-              variant="tonal"
-              class="mb-4"
-            >
-              This is a balance adjustment transaction. Adjustments don't have a payee.
-            </v-alert>
+            <div class="form-fields">
+              <!-- Adjustment notice -->
+              <v-alert
+                v-if="isAdjustment"
+                type="info"
+                variant="tonal"
+              >
+                This is a balance adjustment transaction. Adjustments don't have a payee.
+              </v-alert>
 
-            <!-- Account -->
-            <AccountSelect
-              v-model="formAccountId"
-              label="Account"
-              :rules="required"
-              :disabled="loading"
-              :density="fieldDensity"
-              :hide-details="fieldHideDetails"
-            />
+              <!-- Account -->
+              <AccountSelect
+                v-model="formAccountId"
+                label="Account"
+                :rules="required"
+                :disabled="loading"
+                :density="fieldDensity"
+                :hide-details="fieldHideDetails"
+              />
 
-            <!-- Payee (only for non-adjustment transactions) -->
-            <PayeeSelect
-              v-if="!isAdjustment"
-              v-model="payeeId"
-              :rules="required"
-              :disabled="loading"
-              :class="fieldSpacing"
-              :density="fieldDensity"
-              :hide-details="fieldHideDetails"
-              clearable
-            />
+              <!-- Payee (only for non-adjustment transactions) -->
+              <PayeeSelect
+                v-if="!isAdjustment"
+                v-model="payeeId"
+                :rules="required"
+                :disabled="loading"
+                :density="fieldDensity"
+                :hide-details="fieldHideDetails"
+                clearable
+              />
 
-            <!-- Envelope Selection (for budget accounts) -->
-            <template v-if="isInBudgetAccount && !isAdjustment">
-              <div :class="['d-flex align-center justify-space-between', fieldSpacing, mobile ? 'mb-1' : 'mb-2']">
-                <span class="text-subtitle-1 font-weight-medium">{{ envelopeLabel }}</span>
-                <v-btn
-                  v-if="!isSplitMode && !showIncomeAllocationOptions"
-                  variant="text"
-                  size="small"
-                  @click="enableSplitMode"
-                >
-                  Split across envelopes
-                </v-btn>
-                <v-btn
-                  v-else-if="isSplitMode"
-                  variant="text"
-                  size="small"
-                  @click="disableSplitMode"
-                >
-                  Use single {{ envelopeLabel.toLowerCase() }}
-                </v-btn>
-              </div>
-
-              <!-- Income Allocation Mode Selector (for new income transactions) -->
-              <template v-if="showIncomeAllocationOptions">
-                <v-radio-group
-                  v-model="incomeAllocationMode"
-                  inline
-                  density="compact"
-                  hide-details
-                  class="mb-2"
-                >
-                  <v-radio
-                    v-if="hasActiveRules"
-                    label="Auto-distribute"
-                    value="rules"
-                  />
-                  <v-radio
-                    label="Envelope"
-                    value="envelope"
-                  />
-                  <v-radio
-                    label="None"
-                    value="unallocated"
-                  />
-                </v-radio-group>
-
-                <!-- Envelope dropdown for "envelope" mode -->
-                <EnvelopeSelect
-                  v-if="incomeAllocationMode === 'envelope'"
-                  v-model="selectedEnvelopeId"
-                  :label="envelopeLabel"
-                  :disabled="loading"
-                  :density="fieldDensity"
-                  :hide-details="fieldHideDetails"
-                  clearable
-                  include-unallocated
-                />
-              </template>
-
-              <!-- Single Envelope Mode (for expenses or editing) -->
-              <template v-else-if="!isSplitMode">
-                <EnvelopeSelect
-                  v-model="selectedEnvelopeId"
-                  :label="envelopeLabel"
-                  :disabled="loading"
-                  :density="fieldDensity"
-                  :hide-details="fieldHideDetails"
-                  :clearable="!isEnvelopeRequired"
-                  :rules="isEnvelopeRequired ? required : []"
-                  :include-unallocated="!isEnvelopeRequired"
-                  :hint="isEnvelopeRequired ? 'Required for expenses' : 'Leave empty to use Unallocated'"
-                  persistent-hint
-                />
-              </template>
-
-              <!-- Split Mode -->
-              <template v-else>
+              <!-- Envelope Selection (for budget accounts) -->
+              <template v-if="isInBudgetAccount && !isAdjustment">
+                <!-- Income Allocation Container -->
                 <div
-                  v-for="(allocation, index) in allocations"
-                  :key="index"
-                  class="d-flex gap-2 mb-2 align-center"
+                  v-if="showIncomeAllocationOptions"
+                  class="income-allocation-container"
                 >
+                  <span class="income-section-title">Income Allocation</span>
+
+                  <v-btn-toggle
+                    v-model="incomeAllocationMode"
+                    mandatory
+                    density="compact"
+                    data-testid="income-allocation-toggle"
+                    class="income-allocation-toggle mt-2"
+                  >
+                    <v-btn
+                      v-if="hasActiveRules"
+                      value="rules"
+                      size="small"
+                    >
+                      Auto-distribute
+                    </v-btn>
+                    <v-btn
+                      value="envelope"
+                      size="small"
+                    >
+                      Envelope
+                    </v-btn>
+                    <v-btn
+                      value="unallocated"
+                      size="small"
+                    >
+                      None
+                    </v-btn>
+                  </v-btn-toggle>
+
+                  <!-- Envelope dropdown for "envelope" mode -->
                   <EnvelopeSelect
-                    v-model="allocation.envelope_id"
+                    v-if="incomeAllocationMode === 'envelope'"
+                    v-model="selectedEnvelopeId"
                     :label="envelopeLabel"
-                    :include-unallocated="!isEnvelopeRequired"
-                    density="compact"
-                    hide-details
-                    style="flex: 2"
-                  />
-                  <v-text-field
-                    v-model="allocation.amount"
-                    label="Amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    prefix="$"
-                    density="compact"
-                    hide-details
-                    style="flex: 1"
-                    @focus="autoFillRemainder(index)"
-                  />
-                  <v-btn
-                    icon="mdi-close"
-                    size="small"
-                    variant="text"
-                    @click="removeAllocation(index)"
+                    :disabled="loading"
+                    :density="fieldDensity"
+                    :hide-details="fieldHideDetails"
+                    class="mt-2"
+                    clearable
+                    include-unallocated
                   />
                 </div>
 
-                <v-btn
-                  variant="tonal"
-                  size="small"
-                  prepend-icon="mdi-plus"
-                  class="mt-2"
-                  @click="addAllocation"
-                >
-                  Add Allocation
-                </v-btn>
-
+                <!-- Envelope Section Container (expenses / editing) -->
                 <div
-                  v-if="allocations.length > 0"
-                  class="mt-4 text-body-2"
+                  v-else
+                  class="envelope-section-container"
                 >
-                  <div class="d-flex justify-space-between">
-                    <span>Total Amount:</span>
-                    <MoneyDisplay :amount="Math.abs(amountInCents)" />
+                  <div class="envelope-section-header">
+                    <span class="envelope-section-title">Envelope</span>
+                    <v-btn
+                      v-if="!isSplitMode"
+                      variant="text"
+                      size="small"
+                      @click="enableSplitMode"
+                    >
+                      Split
+                    </v-btn>
+                    <v-btn
+                      v-else
+                      variant="text"
+                      size="small"
+                      @click="disableSplitMode"
+                    >
+                      Use Single
+                    </v-btn>
                   </div>
-                  <div class="d-flex justify-space-between">
-                    <span>Allocated:</span>
-                    <MoneyDisplay :amount="allocatedAmount" />
-                  </div>
-                  <div class="d-flex justify-space-between font-weight-medium">
-                    <span>Unallocated:</span>
-                    <MoneyDisplay :amount="unallocatedAmount" />
-                  </div>
+
+                  <!-- Single Envelope Mode -->
+                  <template v-if="!isSplitMode">
+                    <EnvelopeSelect
+                      v-model="selectedEnvelopeId"
+                      :label="envelopeLabel"
+                      :disabled="loading"
+                      :density="fieldDensity"
+                      :hide-details="fieldHideDetails"
+                      :clearable="!isEnvelopeRequired"
+                      :rules="isEnvelopeRequired ? required : []"
+                      :include-unallocated="!isEnvelopeRequired"
+                      :hint="isEnvelopeRequired ? 'Required for expenses' : 'Leave empty to use Unallocated'"
+                      persistent-hint
+                    />
+                  </template>
+
+                  <!-- Split Mode -->
+                  <template v-else>
+                    <div
+                      v-for="(allocation, index) in allocations"
+                      :key="index"
+                      class="d-flex gap-2 mb-2 align-center"
+                      data-testid="allocation-row"
+                    >
+                      <EnvelopeSelect
+                        v-model="allocation.envelope_id"
+                        :label="envelopeLabel"
+                        :include-unallocated="!isEnvelopeRequired"
+                        density="compact"
+                        hide-details
+                        style="flex: 2"
+                      />
+                      <v-text-field
+                        v-model="allocation.amount"
+                        label="Amount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        prefix="$"
+                        density="compact"
+                        hide-details
+                        style="flex: 1"
+                        @focus="autoFillRemainder(index)"
+                      />
+                      <v-btn
+                        icon="mdi-close"
+                        size="small"
+                        variant="flat"
+                        color="error"
+                        class="allocation-remove-btn"
+                        @click="removeAllocation(index)"
+                      />
+                    </div>
+
+                    <v-btn
+                      variant="outlined"
+                      size="small"
+                      color="primary"
+                      prepend-icon="mdi-plus"
+                      class="mt-2 add-allocation-btn"
+                      @click="addAllocation"
+                    >
+                      Add Allocation
+                    </v-btn>
+
+                    <div
+                      v-if="allocations.length > 0"
+                      class="mt-4 text-body-2 split-summary"
+                    >
+                      <div class="d-flex justify-space-between">
+                        <span>Total Amount:</span>
+                        <MoneyDisplay :amount="Math.abs(amountInCents)" />
+                      </div>
+                      <div class="d-flex justify-space-between">
+                        <span>Allocated:</span>
+                        <MoneyDisplay :amount="allocatedAmount" />
+                      </div>
+                      <v-divider class="my-1" />
+                      <div class="d-flex justify-space-between font-weight-medium">
+                        <span>Unallocated:</span>
+                        <MoneyDisplay :amount="unallocatedAmount" />
+                      </div>
+                    </div>
+
+                    <!-- Split mode validation error -->
+                    <v-alert
+                      v-if="isEnvelopeRequired && !isSplitModeValid"
+                      type="error"
+                      variant="tonal"
+                      density="compact"
+                      class="mt-2"
+                    >
+                      At least one envelope allocation is required for expenses
+                    </v-alert>
+                  </template>
                 </div>
-
-                <!-- Split mode validation error -->
-                <v-alert
-                  v-if="isEnvelopeRequired && !isSplitModeValid"
-                  type="error"
-                  variant="tonal"
-                  density="compact"
-                  class="mt-2"
-                >
-                  At least one envelope allocation is required for expenses
-                </v-alert>
               </template>
-            </template>
 
-            <!-- Date and Amount -->
-            <v-row :class="fieldSpacing" dense>
-              <v-col :cols="mobile ? 6 : 12">
-                <v-text-field
-                  v-model="date"
-                  label="Date"
-                  type="date"
-                  :rules="required"
-                  :disabled="loading"
-                  :density="fieldDensity"
-                  :hide-details="fieldHideDetails"
-                />
-              </v-col>
-              <v-col :cols="mobile ? 6 : 12" :class="mobile ? '' : fieldSpacing">
-                <MoneyInput
-                  v-model="amount"
-                  v-model:is-expense="isExpense"
-                  :disabled="loading"
-                  :density="fieldDensity"
-                  :hide-details="fieldHideDetails"
-                />
-              </v-col>
-            </v-row>
+              <!-- Date and Amount -->
+              <v-row dense>
+                <v-col cols="6">
+                  <v-text-field
+                    v-model="date"
+                    label="Date"
+                    type="date"
+                    :rules="required"
+                    :disabled="loading"
+                    :density="fieldDensity"
+                    :hide-details="fieldHideDetails"
+                  />
+                </v-col>
+                <v-col cols="6">
+                  <MoneyInput
+                    v-model="amount"
+                    v-model:is-expense="isExpense"
+                    :disabled="loading"
+                    :density="fieldDensity"
+                    :hide-details="fieldHideDetails"
+                  />
+                </v-col>
+              </v-row>
 
-            <!-- Memo -->
-            <v-text-field
-              v-model="memo"
-              label="Memo (optional)"
-              :disabled="loading"
-              :class="fieldSpacing"
-              :density="fieldDensity"
-              :hide-details="fieldHideDetails"
-            />
+              <!-- Memo -->
+              <v-text-field
+                v-model="memo"
+                label="Memo (optional)"
+                prepend-inner-icon="mdi-text-box-outline"
+                :disabled="loading"
+                :density="fieldDensity"
+                :hide-details="fieldHideDetails"
+              />
 
-            <!-- Location -->
-            <LocationSelect
-              v-model="locationId"
-              label="Location (optional)"
-              clearable
-              :disabled="loading"
-              :class="fieldSpacing"
-              :density="fieldDensity"
-              :hide-details="fieldHideDetails"
-            />
+              <!-- Location -->
+              <LocationSelect
+                v-model="locationId"
+                label="Location (optional)"
+                prepend-inner-icon="mdi-map-marker-outline"
+                clearable
+                :disabled="loading"
+                :density="fieldDensity"
+                :hide-details="fieldHideDetails"
+              />
+            </div>
           </template>
 
           <!-- Transfer Form -->
           <template v-else>
-            <AccountSelect
-              v-model="sourceAccountId"
-              label="From Account"
-              :rules="required"
-              :disabled="loading"
-              :density="fieldDensity"
-              :hide-details="fieldHideDetails"
-            />
+            <div class="form-fields">
+              <AccountSelect
+                v-model="sourceAccountId"
+                label="From Account"
+                :rules="required"
+                :disabled="loading"
+                :density="fieldDensity"
+                :hide-details="fieldHideDetails"
+              />
 
-            <AccountSelect
-              v-model="destinationAccountId"
-              label="To Account"
-              :exclude-ids="sourceAccountId ? [sourceAccountId] : []"
-              :rules="required"
-              :disabled="loading || !sourceAccountId"
-              :class="fieldSpacing"
-              :density="fieldDensity"
-              :hide-details="fieldHideDetails"
-            />
+              <AccountSelect
+                v-model="destinationAccountId"
+                label="To Account"
+                :exclude-ids="sourceAccountId ? [sourceAccountId] : []"
+                :rules="required"
+                :disabled="loading || !sourceAccountId"
+                :density="fieldDensity"
+                :hide-details="fieldHideDetails"
+              />
 
-            <!-- Envelope (for budget -> tracking transfers) -->
-            <EnvelopeSelect
-              v-if="isBudgetToTrackingTransfer"
-              v-model="transferEnvelopeId"
-              label="Envelope"
-              :rules="required"
-              :disabled="loading"
-              :class="fieldSpacing"
-              :density="fieldDensity"
-              :hide-details="fieldHideDetails"
-              hint="Which envelope is this money coming from?"
-              persistent-hint
-            />
+              <!-- Envelope (for budget -> tracking transfers) -->
+              <EnvelopeSelect
+                v-if="isBudgetToTrackingTransfer"
+                v-model="transferEnvelopeId"
+                label="Envelope"
+                :rules="required"
+                :disabled="loading"
+                :density="fieldDensity"
+                :hide-details="fieldHideDetails"
+                hint="Which envelope is this money coming from?"
+                persistent-hint
+              />
 
-            <!-- Date and Amount -->
-            <v-row :class="fieldSpacing" dense>
-              <v-col :cols="mobile ? 6 : 12">
-                <v-text-field
-                  v-model="date"
-                  label="Date"
-                  type="date"
-                  :rules="required"
-                  :disabled="loading"
-                  :density="fieldDensity"
-                  :hide-details="fieldHideDetails"
-                />
-              </v-col>
-              <v-col :cols="mobile ? 6 : 12" :class="mobile ? '' : fieldSpacing">
-                <MoneyInput
-                  v-model="amount"
-                  :disabled="loading"
-                  :density="fieldDensity"
-                  :hide-details="fieldHideDetails"
-                />
-              </v-col>
-            </v-row>
+              <!-- Date and Amount -->
+              <v-row dense>
+                <v-col cols="6">
+                  <v-text-field
+                    v-model="date"
+                    label="Date"
+                    type="date"
+                    :rules="required"
+                    :disabled="loading"
+                    :density="fieldDensity"
+                    :hide-details="fieldHideDetails"
+                  />
+                </v-col>
+                <v-col cols="6">
+                  <MoneyInput
+                    v-model="amount"
+                    :disabled="loading"
+                    :density="fieldDensity"
+                    :hide-details="fieldHideDetails"
+                  />
+                </v-col>
+              </v-row>
 
-            <!-- Memo -->
-            <v-text-field
-              v-model="memo"
-              label="Memo (optional)"
-              :disabled="loading"
-              :class="fieldSpacing"
-              :density="fieldDensity"
-              :hide-details="fieldHideDetails"
-            />
+              <!-- Memo -->
+              <v-text-field
+                v-model="memo"
+                label="Memo (optional)"
+                prepend-inner-icon="mdi-text-box-outline"
+                :disabled="loading"
+                :density="fieldDensity"
+                :hide-details="fieldHideDetails"
+              />
+            </div>
           </template>
         </v-form>
       </v-card-text>
@@ -978,6 +1004,7 @@ async function handleDelete() {
           v-if="isEditing"
           color="error"
           variant="text"
+          rounded="lg"
           class="mr-auto"
           @click="showDeleteDialog = true"
         >
@@ -985,6 +1012,7 @@ async function handleDelete() {
         </v-btn>
         <v-btn
           variant="text"
+          rounded="lg"
           :disabled="loading"
           @click="closeDialog"
         >
@@ -994,15 +1022,18 @@ async function handleDelete() {
           v-if="!isEditing"
           variant="tonal"
           color="primary"
+          rounded="lg"
           :loading="loading"
           :disabled="!formValid || !isSplitModeValid"
           @click="handleSubmit(true)"
         >
-          Save & Add Another
+          Save & New
         </v-btn>
         <v-btn
           variant="elevated"
           color="primary"
+          rounded="lg"
+          class="create-btn"
           :loading="loading"
           :disabled="!formValid || !isSplitModeValid"
           @click="handleSubmit(false)"
@@ -1017,7 +1048,7 @@ async function handleDelete() {
       v-model="showDeleteDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Delete Transaction</v-card-title>
         <v-card-text>
           Are you sure you want to delete this transaction? This action cannot be undone.
@@ -1050,7 +1081,7 @@ async function handleDelete() {
       v-model="showPreviewDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Allocation Preview</v-card-title>
         <v-card-text>
           <div
@@ -1085,6 +1116,7 @@ async function handleDelete() {
           <v-btn
             color="primary"
             variant="elevated"
+            class="create-btn"
             :loading="loading"
             @click="confirmPreviewAndSubmit"
           >
@@ -1113,6 +1145,76 @@ async function handleDelete() {
   background: rgb(var(--v-theme-surface));
   border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Envelope section container */
+.envelope-section-container {
+  background: rgba(var(--v-theme-primary), 0.04);
+  border: 1px solid rgba(var(--v-theme-primary), 0.08);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.envelope-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.envelope-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgb(var(--v-theme-primary));
+}
+
+/* Income allocation container */
+.income-allocation-container {
+  background: rgba(var(--v-theme-success), 0.04);
+  border: 1px solid rgba(var(--v-theme-success), 0.08);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.income-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgb(var(--v-theme-success));
+}
+
+.income-allocation-toggle {
+  width: 100%;
+}
+
+.income-allocation-toggle .v-btn {
+  flex: 1;
+}
+
+/* Split mode styling */
+.allocation-remove-btn {
+  background: rgba(var(--v-theme-error), 0.1) !important;
+}
+
+.add-allocation-btn {
+  border-style: dashed !important;
+  border-color: rgba(var(--v-theme-primary), 0.2) !important;
+  background: rgba(var(--v-theme-primary), 0.08) !important;
+  border-radius: 10px !important;
+}
+
+.split-summary {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* Close button */
+.close-btn {
+  background: rgba(var(--v-theme-on-surface), 0.05) !important;
 }
 
 /* Improve disabled button visibility in dark mode */

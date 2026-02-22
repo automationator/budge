@@ -1065,7 +1065,7 @@ async function handleRepair() {
       v-model="showTransferDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Transfer Money</v-card-title>
         <v-card-text>
           <!-- Direction Toggle: Only show when opened from envelope card -->
@@ -1090,57 +1090,57 @@ async function handleRepair() {
             </v-btn>
           </v-btn-toggle>
 
-          <!-- Mode 1: Source is pre-selected (transfer OUT) -->
-          <template v-if="transferFromId && !transferToId">
-            <p
-              v-if="!transferContextEnvelopeId"
-              class="text-body-2 mb-4"
-            >
-              Moving money from <strong>{{ transferFromName }}</strong>
-            </p>
+          <div class="form-fields">
+            <!-- Mode 1: Source is pre-selected (transfer OUT) -->
+            <template v-if="transferFromId && !transferToId">
+              <p
+                v-if="!transferContextEnvelopeId"
+                class="text-body-2 mb-4"
+              >
+                Moving money from <strong>{{ transferFromName }}</strong>
+              </p>
 
-            <EnvelopeSelect
-              v-model="transferToId"
-              label="To Envelope"
-              grouped
-              show-balances
-              include-credit-cards
-              :exclude-ids="transferFromId ? [transferFromId] : []"
-              class="mb-4"
+              <EnvelopeSelect
+                v-model="transferToId"
+                label="To Envelope"
+                grouped
+                show-balances
+                include-credit-cards
+                :exclude-ids="transferFromId ? [transferFromId] : []"
+              />
+            </template>
+
+            <!-- Mode 2: Destination is pre-selected (transfer INTO or covering overspending) -->
+            <template v-else-if="transferToId && !transferFromId">
+              <p
+                v-if="!transferContextEnvelopeId"
+                class="text-body-2 mb-4"
+              >
+                Cover overspending in <strong>{{ transferToName }}</strong>
+              </p>
+
+              <EnvelopeSelect
+                v-model="transferFromId"
+                label="From Envelope"
+                grouped
+                show-balances
+                include-credit-cards
+                :exclude-ids="transferToId ? [transferToId] : []"
+              />
+            </template>
+
+            <!-- Mode 3: Both selected (shouldn't normally happen) -->
+            <template v-else>
+              <p class="text-body-2 mb-4">
+                Moving money from <strong>{{ transferFromName }}</strong> to <strong>{{ transferToName }}</strong>
+              </p>
+            </template>
+
+            <MoneyInput
+              v-model="transferAmount"
+              label="Amount"
             />
-          </template>
-
-          <!-- Mode 2: Destination is pre-selected (transfer INTO or covering overspending) -->
-          <template v-else-if="transferToId && !transferFromId">
-            <p
-              v-if="!transferContextEnvelopeId"
-              class="text-body-2 mb-4"
-            >
-              Cover overspending in <strong>{{ transferToName }}</strong>
-            </p>
-
-            <EnvelopeSelect
-              v-model="transferFromId"
-              label="From Envelope"
-              grouped
-              show-balances
-              include-credit-cards
-              :exclude-ids="transferToId ? [transferToId] : []"
-              class="mb-4"
-            />
-          </template>
-
-          <!-- Mode 3: Both selected (shouldn't normally happen) -->
-          <template v-else>
-            <p class="text-body-2 mb-4">
-              Moving money from <strong>{{ transferFromName }}</strong> to <strong>{{ transferToName }}</strong>
-            </p>
-          </template>
-
-          <MoneyInput
-            v-model="transferAmount"
-            label="Amount"
-          />
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -1152,6 +1152,7 @@ async function handleRepair() {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="transferring"
             :disabled="!transferFromId || !transferToId || !transferAmount || parseFloat(transferAmount) <= 0"
             @click="handleTransfer"
@@ -1167,87 +1168,83 @@ async function handleRepair() {
       v-model="showCreateDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Create Envelope</v-card-title>
         <v-card-text>
-          <v-text-field
-            v-model="newEnvelopeName"
-            label="Envelope Name"
-            autofocus
-            :error="envelopeNameExists"
-            :error-messages="envelopeNameExists ? 'An envelope with this name already exists' : undefined"
-            class="mb-4"
-          />
-
-          <v-text-field
-            v-model="newEnvelopeIcon"
-            label="Icon (emoji)"
-            placeholder="🛒"
-            hint="Optional - tap to open emoji keyboard"
-            persistent-hint
-            class="mb-4"
-            style="max-width: 120px"
-          />
-
-          <v-select
-            v-model="newEnvelopeGroupId"
-            label="Group (optional)"
-            :items="groupOptions"
-            clearable
-            class="mb-4"
-          />
-
-          <v-text-field
-            v-if="isCreatingNewGroup"
-            v-model="inlineNewGroupName"
-            label="New Group Name"
-            :error="groupNameExists"
-            :error-messages="groupNameExists ? 'A group with this name already exists' : undefined"
-            class="mb-4"
-          />
-
-          <v-text-field
-            v-model="newEnvelopeTargetBalance"
-            label="Target Balance (optional)"
-            type="number"
-            step="0.01"
-            min="0"
-            prefix="$"
-            hint="Set a goal amount for this envelope"
-            persistent-hint
-          />
-
-          <v-divider class="my-4" />
-
-          <v-switch
-            v-model="createWithRule"
-            label="Add allocation rule"
-            hint="Automatically allocate money to this envelope"
-            persistent-hint
-            class="mb-4"
-          />
-
-          <template v-if="createWithRule">
-            <v-alert
-              v-if="showFillToTargetWarning"
-              type="warning"
-              variant="tonal"
-              density="compact"
-              class="mb-4"
-            >
-              Fill to Target requires a target balance to be set above.
-            </v-alert>
-
-            <AllocationRuleForm
-              ref="inlineRuleFormRef"
-              :default-name="newEnvelopeName"
-              :show-envelope-select="false"
-              :show-actions="false"
-              :default-priority="getNextRulePriority()"
-              @update:valid="inlineRuleFormValid = $event"
-              @update:rule-type="handleRuleTypeChange"
+          <div class="form-fields">
+            <v-text-field
+              v-model="newEnvelopeName"
+              label="Envelope Name"
+              autofocus
+              :error="envelopeNameExists"
+              :error-messages="envelopeNameExists ? 'An envelope with this name already exists' : undefined"
             />
-          </template>
+
+            <v-text-field
+              v-model="newEnvelopeIcon"
+              label="Icon (emoji)"
+              placeholder="🛒"
+              hint="Optional - tap to open emoji keyboard"
+              persistent-hint
+              style="max-width: 120px"
+            />
+
+            <v-select
+              v-model="newEnvelopeGroupId"
+              label="Group (optional)"
+              :items="groupOptions"
+              clearable
+            />
+
+            <v-text-field
+              v-if="isCreatingNewGroup"
+              v-model="inlineNewGroupName"
+              label="New Group Name"
+              :error="groupNameExists"
+              :error-messages="groupNameExists ? 'A group with this name already exists' : undefined"
+            />
+
+            <v-text-field
+              v-model="newEnvelopeTargetBalance"
+              label="Target Balance (optional)"
+              type="number"
+              step="0.01"
+              min="0"
+              prefix="$"
+              hint="Set a goal amount for this envelope"
+              persistent-hint
+            />
+
+            <v-divider class="my-4" />
+
+            <v-switch
+              v-model="createWithRule"
+              label="Add allocation rule"
+              hint="Automatically allocate money to this envelope"
+              persistent-hint
+            />
+
+            <template v-if="createWithRule">
+              <v-alert
+                v-if="showFillToTargetWarning"
+                type="warning"
+                variant="tonal"
+                density="compact"
+              >
+                Fill to Target requires a target balance to be set above.
+              </v-alert>
+
+              <AllocationRuleForm
+                ref="inlineRuleFormRef"
+                :default-name="newEnvelopeName"
+                :show-envelope-select="false"
+                :show-actions="false"
+                :default-priority="getNextRulePriority()"
+                @update:valid="inlineRuleFormValid = $event"
+                @update:rule-type="handleRuleTypeChange"
+              />
+            </template>
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -1259,6 +1256,7 @@ async function handleRepair() {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="creating"
             :disabled="isCreateEnvelopeDisabled"
             @click="handleCreateEnvelope"
@@ -1274,7 +1272,7 @@ async function handleRepair() {
       v-model="showCreateGroupDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Create Group</v-card-title>
         <v-card-text>
           <v-text-field
@@ -1294,6 +1292,7 @@ async function handleRepair() {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="creatingGroup"
             :disabled="!newGroupName.trim()"
             @click="handleCreateGroup"
@@ -1309,7 +1308,7 @@ async function handleRepair() {
       v-model="showRuleDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>New Allocation Rule</v-card-title>
         <v-card-text>
           <AllocationRuleForm
@@ -1330,7 +1329,7 @@ async function handleRepair() {
       v-model="showAutoAssignDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Auto-Assign Money</v-card-title>
         <v-card-text>
           <div
@@ -1433,6 +1432,7 @@ async function handleRepair() {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="autoAssigning"
             :disabled="!autoAssignPreview?.allocations.length"
             @click="handleAutoAssign"

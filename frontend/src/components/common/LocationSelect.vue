@@ -15,6 +15,7 @@ const props = withDefaults(
     hideDetails?: boolean | 'auto'
     rules?: ((v: unknown) => boolean | string)[]
     allowCreate?: boolean
+    prependInnerIcon?: string
   }>(),
   {
     label: 'Location',
@@ -26,6 +27,7 @@ const props = withDefaults(
     hideDetails: false,
     rules: () => [],
     allowCreate: true,
+    prependInnerIcon: undefined,
   }
 )
 
@@ -97,6 +99,7 @@ async function createNewLocation() {
     :density="density"
     :hide-details="hideDetails"
     :rules="rules"
+    :prepend-inner-icon="prependInnerIcon"
     auto-select-first
   >
     <template #no-data>

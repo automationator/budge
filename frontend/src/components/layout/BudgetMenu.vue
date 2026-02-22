@@ -226,7 +226,7 @@ function handleLogout() {
       v-model="showCreateDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Create New Budget</v-card-title>
         <v-card-text>
           <v-text-field
@@ -249,6 +249,7 @@ function handleLogout() {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="creating"
             :disabled="!budgetName.trim()"
             @click="handleCreateBudget"

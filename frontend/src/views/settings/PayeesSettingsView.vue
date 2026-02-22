@@ -212,40 +212,39 @@ async function deletePayee() {
       v-model="showEditDialog"
       max-width="500"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>{{ dialogTitle }}</v-card-title>
         <v-card-text>
           <v-form @submit.prevent="savePayee">
-            <v-text-field
-              v-model="formName"
-              label="Name"
-              required
-              :rules="[(v) => !!v.trim() || 'Name is required']"
-            />
+            <div class="form-fields">
+              <v-text-field
+                v-model="formName"
+                label="Name"
+                required
+                :rules="[(v) => !!v.trim() || 'Name is required']"
+              />
 
-            <v-text-field
-              v-model="formIcon"
-              label="Icon (emoji)"
-              hint="Optional emoji to display"
-              persistent-hint
-              class="mt-4"
-            />
+              <v-text-field
+                v-model="formIcon"
+                label="Icon (emoji)"
+                hint="Optional emoji to display"
+                persistent-hint
+              />
 
-            <v-textarea
-              v-model="formDescription"
-              label="Description"
-              rows="2"
-              class="mt-4"
-            />
+              <v-textarea
+                v-model="formDescription"
+                label="Description"
+                rows="2"
+              />
 
-            <EnvelopeSelect
-              v-model="formDefaultEnvelopeId"
-              label="Default Envelope"
-              clearable
-              hint="Auto-fill this envelope when selecting this payee"
-              persistent-hint
-              class="mt-4"
-            />
+              <EnvelopeSelect
+                v-model="formDefaultEnvelopeId"
+                label="Default Envelope"
+                clearable
+                hint="Auto-fill this envelope when selecting this payee"
+                persistent-hint
+              />
+            </div>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -258,6 +257,7 @@ async function deletePayee() {
           </v-btn>
           <v-btn
             color="primary"
+            class="create-btn"
             :loading="saving"
             :disabled="!formName.trim()"
             @click="savePayee"
@@ -273,7 +273,7 @@ async function deletePayee() {
       v-model="showDeleteDialog"
       max-width="400"
     >
-      <v-card>
+      <v-card rounded="xl">
         <v-card-title>Delete Payee</v-card-title>
         <v-card-text>
           Are you sure you want to delete <strong>{{ payeeToDelete?.name }}</strong>? Payees that
