@@ -21,6 +21,11 @@ function closeMoreMenu() {
   showMoreMenu.value = false
 }
 
+const currentAccountId = computed(() => {
+  const match = route.path.match(/^\/accounts\/([^/]+)$/)
+  return match ? (route.params.id as string) : null
+})
+
 const activeTab = computed(() => {
   const path = route.path
   if (path === '/') return 0
@@ -59,7 +64,7 @@ const activeTab = computed(() => {
     <!-- Add Transaction (opens modal, not a navigation) -->
     <v-btn
       :value="2"
-      @click="openNewTransaction()"
+      @click="openNewTransaction(currentAccountId)"
     >
       <v-icon>mdi-plus-circle</v-icon>
       <span>Add</span>
