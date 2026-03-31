@@ -24,12 +24,11 @@ async function mountAndSettle<T extends Parameters<typeof mountView>[0]>(
 }
 
 describe('AccountsView', () => {
-  it('displays page title and Add Account button', async () => {
+  it('displays page title and settings menu', async () => {
     const { wrapper } = await mountAndSettle(AccountsView)
     expect(wrapper.find('h1').text()).toBe('Accounts')
-    const addBtn = wrapper.find('[data-testid="add-account-button"]')
-    expect(addBtn.exists()).toBe(true)
-    expect(addBtn.text()).toContain('Add Account')
+    const settingsBtn = wrapper.find('[data-testid="accounts-settings-menu"]')
+    expect(settingsBtn.exists()).toBe(true)
   })
 
   it('shows empty state when no accounts', async () => {
@@ -48,7 +47,9 @@ describe('AccountsView', () => {
     const { wrapper } = await mountAndSettle(AccountsView, { attachTo: document.body })
 
     // Open create dialog
-    await wrapper.find('[data-testid="add-account-button"]').trigger('click')
+    await wrapper.find('[data-testid="accounts-settings-menu"]').trigger('click')
+    await flushPromises()
+    await document.querySelector('[data-testid="add-account-menu-item"]')?.dispatchEvent(new Event('click', { bubbles: true }))
     await flushPromises()
 
     // Dialog should show
@@ -77,7 +78,9 @@ describe('AccountsView', () => {
   it('creates a savings account with description', async () => {
     const { wrapper } = await mountAndSettle(AccountsView, { attachTo: document.body })
 
-    await wrapper.find('[data-testid="add-account-button"]').trigger('click')
+    await wrapper.find('[data-testid="accounts-settings-menu"]').trigger('click')
+    await flushPromises()
+    await document.querySelector('[data-testid="add-account-menu-item"]')?.dispatchEvent(new Event('click', { bubbles: true }))
     await flushPromises()
 
     // Fill name
@@ -95,7 +98,9 @@ describe('AccountsView', () => {
   it('creates a credit card account', async () => {
     const { wrapper } = await mountAndSettle(AccountsView, { attachTo: document.body })
 
-    await wrapper.find('[data-testid="add-account-button"]').trigger('click')
+    await wrapper.find('[data-testid="accounts-settings-menu"]').trigger('click')
+    await flushPromises()
+    await document.querySelector('[data-testid="add-account-menu-item"]')?.dispatchEvent(new Event('click', { bubbles: true }))
     await flushPromises()
 
     // Verify the account type select exists with options
@@ -108,7 +113,9 @@ describe('AccountsView', () => {
   it('shows validation error for empty name (disabled button)', async () => {
     const { wrapper } = await mountAndSettle(AccountsView, { attachTo: document.body })
 
-    await wrapper.find('[data-testid="add-account-button"]').trigger('click')
+    await wrapper.find('[data-testid="accounts-settings-menu"]').trigger('click')
+    await flushPromises()
+    await document.querySelector('[data-testid="add-account-menu-item"]')?.dispatchEvent(new Event('click', { bubbles: true }))
     await flushPromises()
 
     // Create button should be disabled (no name entered)
@@ -124,7 +131,9 @@ describe('AccountsView', () => {
   it('creates account with icon from picker', async () => {
     const { wrapper } = await mountAndSettle(AccountsView, { attachTo: document.body })
 
-    await wrapper.find('[data-testid="add-account-button"]').trigger('click')
+    await wrapper.find('[data-testid="accounts-settings-menu"]').trigger('click')
+    await flushPromises()
+    await document.querySelector('[data-testid="add-account-menu-item"]')?.dispatchEvent(new Event('click', { bubbles: true }))
     await flushPromises()
 
     // Icon chips should be visible
@@ -142,7 +151,9 @@ describe('AccountsView', () => {
   it('creates account with custom emoji', async () => {
     const { wrapper } = await mountAndSettle(AccountsView, { attachTo: document.body })
 
-    await wrapper.find('[data-testid="add-account-button"]').trigger('click')
+    await wrapper.find('[data-testid="accounts-settings-menu"]').trigger('click')
+    await flushPromises()
+    await document.querySelector('[data-testid="add-account-menu-item"]')?.dispatchEvent(new Event('click', { bubbles: true }))
     await flushPromises()
 
     // Custom emoji input should exist

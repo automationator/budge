@@ -131,29 +131,43 @@ async function handleCreate(data: FormData) {
       <h1 class="text-h4">
         Accounts
       </h1>
+      <!-- Settings menu (gear icon) -->
+      <v-menu>
+        <template #activator="{ props }">
+          <v-btn
+            icon
+            variant="text"
+            size="small"
+            v-bind="props"
+            data-testid="accounts-settings-menu"
+          >
+            <v-icon>mdi-cog</v-icon>
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item
+            data-testid="add-account-menu-item"
+            @click="showCreateDialog = true"
+          >
+            <template #prepend>
+              <v-icon>mdi-plus</v-icon>
+            </template>
+            <v-list-item-title>Add Account</v-list-item-title>
+          </v-list-item>
+          <v-divider />
+          <v-list-item
+            :disabled="accountsStore.reorderLoading"
+            data-testid="edit-order-menu-item"
+            @click="handleToggleEditMode"
+          >
+            <template #prepend>
+              <v-icon>{{ accountsStore.isEditMode ? 'mdi-check' : 'mdi-pencil' }}</v-icon>
+            </template>
+            <v-list-item-title>{{ accountsStore.isEditMode ? 'Done Editing' : 'Edit Order' }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
       <v-spacer />
-      <v-btn
-        :variant="accountsStore.isEditMode ? 'tonal' : 'text'"
-        :color="accountsStore.isEditMode ? 'primary' : undefined"
-        :loading="accountsStore.reorderLoading"
-        class="mr-2"
-        data-testid="edit-order-button"
-        @click="handleToggleEditMode"
-      >
-        <v-icon start>
-          {{ accountsStore.isEditMode ? 'mdi-check' : 'mdi-pencil' }}
-        </v-icon>
-        {{ accountsStore.isEditMode ? 'Done' : 'Edit Order' }}
-      </v-btn>
-      <v-btn
-        v-if="!accountsStore.isEditMode"
-        color="primary"
-        prepend-icon="mdi-plus"
-        data-testid="add-account-button"
-        @click="showCreateDialog = true"
-      >
-        Add Account
-      </v-btn>
     </div>
 
     <!-- Loading State -->

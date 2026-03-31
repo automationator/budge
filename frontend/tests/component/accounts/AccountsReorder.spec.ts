@@ -51,21 +51,21 @@ function el(wrapper: VueWrapper): HTMLElement {
   return wrapper.element as HTMLElement
 }
 
-// Helper: enter edit mode by clicking the edit-order button
+// Helper: enter edit mode via the settings menu
 async function enterEditMode(wrapper: VueWrapper) {
-  const editBtn = wrapper.find('[data-testid="edit-order-button"]')
-  expect(editBtn.exists()).toBe(true)
-  await editBtn.trigger('click')
+  await wrapper.find('[data-testid="accounts-settings-menu"]').trigger('click')
+  await flushPromises()
+  await document.querySelector('[data-testid="edit-order-menu-item"]')?.dispatchEvent(new Event('click', { bubbles: true }))
   await flushPromises()
   await flushPromises()
   await flushPromises()
 }
 
-// Helper: exit edit mode by clicking the done button
+// Helper: exit edit mode via the settings menu
 async function exitEditMode(wrapper: VueWrapper) {
-  const doneBtn = wrapper.find('[data-testid="edit-order-button"]')
-  expect(doneBtn.exists()).toBe(true)
-  await doneBtn.trigger('click')
+  await wrapper.find('[data-testid="accounts-settings-menu"]').trigger('click')
+  await flushPromises()
+  await document.querySelector('[data-testid="edit-order-menu-item"]')?.dispatchEvent(new Event('click', { bubbles: true }))
   await flushPromises()
   await flushPromises()
 }
@@ -76,43 +76,37 @@ describe('AccountsView - Edit Mode / Reordering', () => {
       useReorderHandlers()
       const { wrapper } = await mountAndSettle()
 
-      // Initially shows "Edit Order" button, no reorder buttons
-      const editBtn = wrapper.find('[data-testid="edit-order-button"]')
-      expect(editBtn.text()).toContain('Edit Order')
+      // Initially no reorder buttons visible
       expect(el(wrapper).querySelector('[data-testid="move-up-button"]')).toBeNull()
 
       // Enter edit mode
       await enterEditMode(wrapper)
 
-      // Button text should change to "Done"
-      expect(wrapper.find('[data-testid="edit-order-button"]').text()).toContain('Done')
       // Reorder buttons should be visible
       expect(el(wrapper).querySelector('[data-testid="move-up-button"]')).not.toBeNull()
 
       // Exit edit mode
       await exitEditMode(wrapper)
 
-      // Button should revert to "Edit Order"
-      expect(wrapper.find('[data-testid="edit-order-button"]').text()).toContain('Edit Order')
       // Reorder buttons should be hidden
       await flushPromises()
       expect(el(wrapper).querySelector('[data-testid="move-up-button"]')).toBeNull()
     })
 
-    it('hides add button in edit mode', async () => {
+    it('settings menu remains accessible in edit mode', async () => {
       useReorderHandlers()
       const { wrapper } = await mountAndSettle()
 
-      // Add button visible initially
-      expect(wrapper.find('[data-testid="add-account-button"]').exists()).toBe(true)
+      // Settings menu visible initially
+      expect(wrapper.find('[data-testid="accounts-settings-menu"]').exists()).toBe(true)
 
-      // Enter edit mode - add button should be hidden
+      // Enter edit mode - settings menu should still be visible
       await enterEditMode(wrapper)
-      expect(wrapper.find('[data-testid="add-account-button"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="accounts-settings-menu"]').exists()).toBe(true)
 
-      // Exit edit mode - add button should reappear
+      // Exit edit mode - settings menu should still be visible
       await exitEditMode(wrapper)
-      expect(wrapper.find('[data-testid="add-account-button"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="accounts-settings-menu"]').exists()).toBe(true)
     })
   })
 
