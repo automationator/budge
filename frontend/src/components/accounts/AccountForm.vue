@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { Account, AccountType } from '@/types'
+import MoneyInput from '@/components/common/MoneyInput.vue'
 
 const props = defineProps<{
   account?: Account | null
@@ -55,6 +56,7 @@ const description = ref('')
 const includeInBudget = ref(true)
 const isActive = ref(true)
 const startingBalance = ref('')
+const isExpense = ref(false)
 const selectedIcon = ref<string | null>(null)
 const customIconInput = ref('')
 
@@ -71,6 +73,7 @@ watch(
       includeInBudget.value = account.include_in_budget
       isActive.value = account.is_active
       startingBalance.value = ''
+      isExpense.value = false
       // Check if icon is in common icons list or is a custom icon
       if (account.icon) {
         const isCommonIcon = commonIcons.some((i) => i.value === account.icon)
@@ -92,6 +95,7 @@ watch(
       includeInBudget.value = true
       isActive.value = true
       startingBalance.value = ''
+      isExpense.value = false
       selectedIcon.value = null
       customIconInput.value = ''
     }
@@ -127,7 +131,7 @@ function handleSubmit() {
   if (startingBalance.value.trim()) {
     const parsed = parseFloat(startingBalance.value)
     if (!isNaN(parsed)) {
-      startingBalanceCents = Math.round(parsed * 100)
+      startingBalanceCents = isExpense.value ? -Math.round(parsed * 100) : Math.round(parsed * 100)
     }
   }
 
@@ -221,15 +225,14 @@ function handleSubmit() {
         rows="2"
       />
 
-      <v-text-field
+      <MoneyInput
         v-if="!isEditing"
         v-model="startingBalance"
+        v-model:is-expense="isExpense"
         label="Starting Balance (optional)"
-        type="number"
-        step="0.01"
-        prefix="$"
+        :disabled="loading"
+        :required="false"
         hint="Set an initial balance for this account"
-        persistent-hint
       />
 
       <v-switch

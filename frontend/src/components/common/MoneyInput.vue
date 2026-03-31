@@ -12,6 +12,7 @@ const props = withDefaults(
     required?: boolean
     isExpense?: boolean | null
     autofocus?: boolean
+    hint?: string
   }>(),
   {
     label: 'Amount',
@@ -22,6 +23,7 @@ const props = withDefaults(
     required: true,
     isExpense: null,
     autofocus: false,
+    hint: undefined,
   }
 )
 
@@ -120,6 +122,8 @@ const toggleSign = () => {
     :density="density"
     :hide-details="hideDetails"
     :autofocus="autofocus"
+    :hint="hint"
+    :persistent-hint="!!hint"
     @update:model-value="handleModelUpdate"
   >
     <template
