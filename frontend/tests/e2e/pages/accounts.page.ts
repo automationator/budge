@@ -7,8 +7,9 @@ import type { AccountType } from '../fixtures/test-data'
  */
 export class AccountsPage extends BasePage {
   // Header elements
-  readonly addAccountButton: Locator
-  readonly editOrderButton: Locator
+  readonly settingsMenuButton: Locator
+  readonly addAccountMenuItem: Locator
+  readonly editOrderMenuItem: Locator
 
   // Account list sections
   readonly allAccountsRow: Locator
@@ -37,8 +38,9 @@ export class AccountsPage extends BasePage {
     super(page)
 
     // Header buttons
-    this.addAccountButton = page.locator('[data-testid="add-account-button"]')
-    this.editOrderButton = page.locator('[data-testid="edit-order-button"]')
+    this.settingsMenuButton = page.locator('[data-testid="accounts-settings-menu"]')
+    this.addAccountMenuItem = page.locator('[data-testid="add-account-menu-item"]')
+    this.editOrderMenuItem = page.locator('[data-testid="edit-order-menu-item"]')
 
     // Account list sections (scoped to main content to avoid matching sidebar)
     const mainContent = page.locator('main, [role="main"]')
@@ -59,7 +61,7 @@ export class AccountsPage extends BasePage {
     this.customIconInput = this.createDialog.locator('[data-testid="custom-icon-input"] input')
     this.useDefaultIconButton = this.createDialog.locator('[data-testid="use-default-icon-button"]')
     this.descriptionInput = this.createDialog.locator('textarea')
-    this.startingBalanceInput = this.createDialog.locator('input[type="number"]')
+    this.startingBalanceInput = this.createDialog.locator('input[inputmode="numeric"]')
     this.includeInBudgetSwitch = this.createDialog.locator('.v-switch').filter({ hasText: 'Include in budget' })
     this.createButton = this.createDialog.getByRole('button', { name: 'Create' })
     this.cancelButton = this.createDialog.getByRole('button', { name: 'Cancel' })
@@ -74,7 +76,8 @@ export class AccountsPage extends BasePage {
    * Open the create account dialog.
    */
   async openCreateDialog() {
-    await this.addAccountButton.click()
+    await this.settingsMenuButton.click()
+    await this.addAccountMenuItem.click()
     await expect(this.createDialog).toBeVisible()
   }
 
@@ -270,12 +273,13 @@ export class AccountsPage extends BasePage {
    * Check if currently in edit mode.
    */
   async isInEditMode(): Promise<boolean> {
-    const buttonText = await this.editOrderButton.textContent()
-    return buttonText?.includes('Done') ?? false
+    // Check for reorder buttons being visible as the indicator of edit mode
+    const moveUpButton = this.page.locator('[data-testid="move-up-button"]').first()
+    return await moveUpButton.isVisible().catch(() => false)
   }
 
   /**
-   * Enter edit mode by clicking the Edit Order button.
+   * Enter edit mode via the settings menu.
    */
   async enterEditMode() {
     if (await this.isInEditMode()) return
@@ -285,33 +289,33 @@ export class AccountsPage extends BasePage {
       .locator('[data-testid="budget-account-item"], [data-testid="tracking-account-item"]')
       .first()
       .waitFor({ state: 'visible', timeout: 10000 })
-    await this.editOrderButton.click()
-    await expect(this.editOrderButton).toContainText('Done')
+    await this.settingsMenuButton.click()
+    await this.editOrderMenuItem.click()
+    await expect(this.page.locator('[data-testid="move-up-button"]').first()).toBeVisible()
   }
 
   /**
-   * Exit edit mode by clicking the Done button.
+   * Exit edit mode via the settings menu.
    */
   async exitEditMode() {
     if (!(await this.isInEditMode())) return
-    await this.editOrderButton.click()
-    await expect(this.editOrderButton).toContainText('Edit Order')
+    await this.settingsMenuButton.click()
+    await this.editOrderMenuItem.click()
+    await expect(this.page.locator('[data-testid="move-up-button"]').first()).toBeHidden()
   }
 
   /**
    * Assert we are in edit mode.
    */
   async expectInEditMode() {
-    await expect(this.editOrderButton).toContainText('Done')
-    await expect(this.addAccountButton).toBeHidden()
+    await expect(this.page.locator('[data-testid="move-up-button"]').first()).toBeVisible()
   }
 
   /**
    * Assert we are not in edit mode.
    */
   async expectNotInEditMode() {
-    await expect(this.editOrderButton).toContainText('Edit Order')
-    await expect(this.addAccountButton).toBeVisible()
+    await expect(this.page.locator('[data-testid="move-up-button"]')).toHaveCount(0)
   }
 
   /**

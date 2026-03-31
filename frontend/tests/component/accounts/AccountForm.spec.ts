@@ -35,7 +35,6 @@ describe('AccountForm', () => {
   describe('create mode', () => {
     it('shows starting balance field', () => {
       const { wrapper } = mountComponent()
-      expect(wrapper.find('input[type="number"]').exists()).toBe(true)
       expect(wrapper.text()).toContain('Starting Balance')
     })
 
@@ -77,7 +76,7 @@ describe('AccountForm', () => {
 
     it('hides starting balance field', () => {
       const { wrapper } = mountComponent({ account: existingAccount })
-      expect(wrapper.find('input[type="number"]').exists()).toBe(false)
+      expect(wrapper.text()).not.toContain('Starting Balance')
     })
 
     it('shows active toggle', () => {
@@ -156,8 +155,11 @@ describe('AccountForm', () => {
       const nameInput = wrapper.find('input[type="text"]')
       await nameInput.setValue('New Account')
 
-      const balanceInput = wrapper.find('input[type="number"]')
-      await balanceInput.setValue('123.45')
+      // MoneyInput uses type="text" with inputmode="numeric" and auto-decimal
+      // Find the MoneyInput's text input (second text input after name)
+      const moneyInput = wrapper.findComponent({ name: 'MoneyInput' })
+      // Simulate typing digits "12345" which MoneyInput formats as "123.45"
+      await moneyInput.vm.$emit('update:modelValue', '123.45')
       await nextTick()
       await nextTick()
 
