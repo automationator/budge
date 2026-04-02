@@ -63,20 +63,20 @@ fresh: clean build up db-upgrade
 
 # make db-revision MESSAGE="blah"
 db-revision:
-	docker compose run --rm api uv run alembic revision --autogenerate -m "$(MESSAGE)"
+	docker compose run --rm budge-api uv run alembic revision --autogenerate -m "$(MESSAGE)"
 
 db-wait:
 	@echo "Waiting for database..."
-	@until docker compose exec db pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" > /dev/null 2>&1; do \
+	@until docker compose exec budge-db pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" > /dev/null 2>&1; do \
 		sleep 1; \
 	done
 	@echo "Database is ready"
 
 db-upgrade: db-wait
-	docker compose run --rm api uv run alembic upgrade head
+	docker compose run --rm budge-api uv run alembic upgrade head
 
 db-downgrade:
-	docker compose run --rm api uv run alembic downgrade -1
+	docker compose run --rm budge-api uv run alembic downgrade -1
 
 restart: down up
 
