@@ -40,7 +40,7 @@ echo "  Database: $POSTGRES_DB"
 echo "  User: $POSTGRES_USER"
 
 # Run pg_dump inside the database container
-docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T db \
+docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T budge-db \
     pg_dump -U "$POSTGRES_USER" \
     --schema=public \
     --format=custom \

@@ -3,17 +3,17 @@
 # Usage:
 #   1. Copy .env.prod.example to .env.prod and configure
 #   2. Run: docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
-#   3. Run migrations: docker compose -f docker-compose.prod.yml exec api uv run alembic upgrade head
+#   3. Run migrations: docker compose -f docker-compose.prod.yml exec budge-api uv run alembic upgrade head
 #
 # Or use: make prod-up
 
 services:
-  nginx:
+  budge-nginx:
     image: ghcr.io/automationator/budge-nginx:${IMAGE_TAG:-latest}
     ports:
       - "${HTTP_PORT:-80}:80"
     depends_on:
-      api:
+      budge-api:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
@@ -23,7 +23,7 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  api:
+  budge-api:
     image: ghcr.io/automationator/budge-api:${IMAGE_TAG:-latest}
     expose:
       - "8000"
@@ -45,7 +45,7 @@ services:
       # Database
       - POSTGRES_USER=${POSTGRES_USER:-budge}
       - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}"
-      - POSTGRES_HOST=db
+      - POSTGRES_HOST=budge-db
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-budge}
       # Updates
@@ -58,7 +58,7 @@ services:
       --proxy-headers
       --forwarded-allow-ips=*
     depends_on:
-      db:
+      budge-db:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -68,7 +68,7 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  db:
+  budge-db:
     image: postgres:18
     expose:
       - "5432"

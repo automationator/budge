@@ -2,6 +2,6 @@
 # Usage: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
 
 services:
-  api:
+  budge-api:
     environment:
       - ENV=e2e

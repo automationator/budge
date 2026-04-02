@@ -79,36 +79,36 @@ fi
 
 echo ""
 echo "Step 1/4: Stopping API service..."
-docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" stop api || true
+docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" stop budge-api || true
 
 echo ""
 echo "Step 2/4: Dropping and recreating database..."
-docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T db \
+docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T budge-db \
     psql -U "$POSTGRES_USER" -d postgres \
     -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DB' AND pid <> pg_backend_pid();" \
     > /dev/null 2>&1 || true
 
-docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T db \
+docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T budge-db \
     psql -U "$POSTGRES_USER" -d postgres \
     -c "DROP DATABASE IF EXISTS $POSTGRES_DB;"
 
-docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T db \
+docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T budge-db \
     psql -U "$POSTGRES_USER" -d postgres \
     -c "CREATE DATABASE $POSTGRES_DB OWNER $POSTGRES_USER;"
 
 echo ""
 echo "Step 3/4: Restoring from backup..."
 if [[ "$BACKUP_FILE" == *.gz ]]; then
-    gunzip -c "$BACKUP_FILE" | docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T db \
+    gunzip -c "$BACKUP_FILE" | docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T budge-db \
         pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --verbose --no-owner --no-privileges
 else
-    docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T db \
+    docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" exec -T budge-db \
         pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --verbose --no-owner --no-privileges < "$BACKUP_FILE"
 fi
 
 echo ""
 echo "Step 4/4: Starting API service..."
-docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" start api
+docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$PROJECT_DIR/.env.prod" start budge-api
 
 echo ""
 echo "=========================================="
